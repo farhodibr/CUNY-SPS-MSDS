@@ -1,0 +1,352 @@
+---
+title: "DATA607 LAB3"
+author: "Farhod Ibragimov"
+date: "2025-02-13"
+output:
+  pdf_document: default
+  html_document:
+    toc: true
+    toc_float: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+## Normalization {#sec-normalization}
+
+Here I'm loading necessary library:
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+library(tidyverse)
+
+```
+
+1.  This code creates an unnormalized form data frame:
+
+```{r}
+social_media_mess_table <- data.frame(
+  user_ID = c("U001", "U002", "U001", "U003", "U002"),
+  username = c("alice_b", "bob_w", "alice_b", "charlie_b", "bob_w"),
+  email = c("alice@example.com", "bob@example.com", "alice@example.com", "charlie@example.com", "bob@example.com"),
+  name = c("Alice Brown", "Bob White", "Alice Brown", "Charlie Black", "Bob White"),
+  hobbie = c("Love traveling", "Coffee addict", "Love traveling", "Fitness fan", "Coffee addict"),
+  post_ID = c("P001", "P002", "P003", "P004", "P005"),
+  post_content = c("Just visited Paris!", "Morning coffee is the best", "Paris is incredible!", "Just finished a great workout", "Coffee with friends"),
+  comment_ID = c("C001", "C002", "C003", "C004", "C005"),
+  comment_content = c("Looks amazing!", "I agree!", "Awesome post!", "Way to go!", "Sounds fun!"),
+  like_ID = c("L001", "L002", "L003", "L004", "L005"),
+  liked_post_ID = c("P001", "P002", "P003", "P004", "P005"),
+  following_user_IDs = c("U002,U003", "U001,U003", "U002,U003", "U001,U002", "U001,U003"),
+  follower_user_IDs = c("U004,U005", "U005,U006", "U004,U005", "U006,U007", "U005,U006")
+)
+
+print(social_media_mess_table)
+```
+
+The reasons why this is unnormalized form (UNF) :
+
+-   There is no primary key defined
+
+-   "`following_user_IDs`" and "`follower_user_IDs`" columns has multi- value attributes
+
+-   It has data inconsistency. If a user changes his email or username, multiple rows needs to be updated.
+
+-   Redundancy issues: user information (`user_ID, email, username, name`) repeated several times.
+
+2.  This code cell below separates user data into its own table.
+
+```{r}
+#users table
+users_table <- social_media_mess_table |>
+  select(user_ID, username,email, name) |>
+  distinct()
+
+print(users_table)
+```
+
+3.  Separates hobbies into its own table with (`user_ID –> hobbie`) linked
+
+```{r}
+#hobbies_table
+hobbies_table <- social_media_mess_table |>
+  select(user_ID, hobbie)|>
+  distinct()
+
+print(hobbies_table)
+```
+
+4.  Creating table for users posts (`post_id` –\> `user_ID` –\> `post_content`).
+
+```{r}
+#posts_table
+posts_table <- social_media_mess_table |>
+  select(post_ID, user_ID, post_content) |>
+  distinct()
+
+print(posts_table)
+```
+
+5.  Creating comments table (``` comment_ID –> post_ID``–>``user_ID --> comment_content) ```
+
+```{r}
+#comments_table
+comments_table <- social_media_mess_table |>
+  select(comment_ID, post_ID, user_ID, comment_content) |>
+  distinct()
+
+print(comments_table)
+```
+
+6.  Separate likes table (`like_ID –> user_ID –> liked_post_ID`)
+
+```{r}
+#likes_table
+likes_table <- social_media_mess_table |>
+  select(like_ID, user_ID, liked_post_ID)|>
+  distinct()|>
+  rename(post_ID = liked_post_ID)
+print(likes_table)
+```
+
+7.  Creates separate table for users liked posts (``` user_ID``–> liked_post_ID ```)
+
+```{r}
+liked_posts_table <- social_media_mess_table |>
+  select(user_ID, liked_post_ID)|>
+  distinct()|>
+  rename(post_ID = liked_post_ID)
+print(liked_posts_table)
+```
+
+8.  Creates a table for users following other users (`user_ID –> following_user_IDs`). Here `separate_longer_delim(following_user_IDs, delim = ',')` separate multi-value `following_user_IDs` into different cell values and assigns them to unique `user_ID`
+
+```{r}
+#print(social_media_mess_table)
+user_following_table <- social_media_mess_table |>
+  select(user_ID, following_user_IDs) |>
+  separate_longer_delim(following_user_IDs, delim = ',')|>
+  distinct()
+print(user_following_table)
+```
+
+9.  This code creates users followers table (`user_ID –> follower_user_IDs`). Here `separate_longer_delim(follower_user_IDs, delim = ",")` separate multi-value `follower_user_IDs` into different cell values and assigns them to unique `user_ID`
+
+```{r}
+user_follower_table <- social_media_mess_table |>
+  select(user_ID, follower_user_IDs) |>
+  separate_longer_delim(follower_user_IDs, delim = ",")|>
+  distinct()
+print(user_follower_table)
+```
+
+10. Joining `users_table` with `posts_tabl`e. The `user_posts` table will have one row for each post along with the corresponding user information. It shows the user details alongside their posts.
+
+```{r}
+#user_posts
+user_posts <- left_join(users_table, posts_table, by = "user_ID")
+print(user_posts)
+```
+
+11. Joining `posts_table` with `comments_table`. The `posts_comments` table will have information from both tables, including the post content and the associated comments. Each post will show which comment it has.
+
+```{r}
+#posts_comments
+posts_comments <- left_join(posts_table, comments_table, by = c("post_ID", "user_ID"))
+print(posts_comments)
+```
+
+12. Joining `posts_table` with `likes_table.` The `posts_likes` table will show the posts and the users who liked them.
+
+```{r}
+posts_likes <- left_join(posts_table, likes_table, by = c("post_ID", "user_ID"))
+print(posts_likes)                        
+```
+
+13. Printing all tables:
+
+```{r}
+print(users_table)
+print(hobbies_table)
+print(posts_table)
+print(comments_table)
+print(likes_table)
+print(user_following_table)
+print(user_follower_table)
+```
+
+**Conclusions:**
+
+-   This code normalizes a messy social media dataset into structured tables, reducing redundancy and ensuring data integrity. For example, selecting the relevant columns (`post_id` –\> `user_ID` –\> `post_content`), this code creates a new table (`user_posts`) that stores each post linked to a unique user and the content they posted. We can track which user made which post while avoiding redundancy.
+
+-   By organizing users, posts, comments, likes, and follower relationships into separate tables, it achieves *Third Normal Form (3NF)* by eliminating partial and transitive dependencies.
+
+-   Relationships such as one-to-many (users –\> posts, posts –\> comments) and many-to-many
+
+    (users \<--\> likes, users \<--\> followers) are structured.
+
+\pagebreak
+
+## Character Manipulation {#sec-character-manipulation}
+
+#### 1. Using the 173 majors listed in fivethirtyeight.com’s College Majors dataset [<https://fivethirtyeight.com/features/the-economic-guide-to-picking-a-college-major/>], provide code that identifies the majors that contain either "DATA" or "STATISTICS"
+
+This code cell downloads `majors-list.csv`file from URL "[https://raw.githubusercontent.com/fivethirtyeight/data/master/college-majors/majors-list.csv"](https://raw.githubusercontent.com/fivethirtyeight/data/master/college-majors/majors-list.csv%22) and loads it into `majors_ds` dataframe:
+
+```{r}
+url <- "https://raw.githubusercontent.com/fivethirtyeight/data/master/college-majors/majors-list.csv"
+majors_ds <- read.csv(url, stringsAsFactors = FALSE)
+
+```
+
+This code filters the `majors_ds` dataframe to find rows where the `Major` column contains the words **"**DATA**"** or **"**STATISTICS**"** (case-insensitive). Here `str_detect(Major, regex("DATA", ignore_case = TRUE))` \| `str_detect(Major, regex("STATISTICS", ignore_case = TRUE))` checks if Major column contains "DATA" or ( \| ) "STATISTICS" words. This code saves matched rows in `identify_majors` dataframe.
+
+```{r}
+identify_majors <- majors_ds |>
+  filter(
+    str_detect(Major, regex("DATA", ignore_case = TRUE)) | 
+    str_detect(Major, regex("STATISTICS", ignore_case = TRUE))
+  )
+print(identify_majors)
+```
+
+#### 2. Describe, in words, what these expressions will match:
+
+-   <div>
+
+    `(.)\1\1`
+
+    </div>
+
+Regex `(.)\1\1` in this format is not gonna work, because of single (\\) backlashes. When R sees `\1`, it interpret it as a special escape sequence, not as a back reference. It has to be double (\\\\) backlashes. Here we use `(.)\1\1` in a code cell below and it is not gonna work:
+
+```{r}
+x <- c("aaa", "GGG", "aan", "???", "222", "334")
+str_extract_all(x, "(.)\1\1")
+```
+
+So let me explain this correct regex format ``` "``(.)\\1\\1" ```
+
+This regex `"(.)\\1\\1"`looks for three identical characters in a row.
+
+`(.)` creates a one capturing group, where dot `.` is any first character in the string.
+
+`\\1` is a back reference. It is checking if second character of the row matches to whatever was captured in first group `(.)`
+
+`\\1\\1` repeats the backreference twice, requiring two more identical characters.
+
+Here is a code example of how regex `(.)\\1\\1` works:
+
+```{r echo=TRUE}
+x <- c("aaa", "GGG", "aan", "???", "222", "334" , "aaab")
+str_extract_all(x, "(.)\\1\\1")
+```
+
+#### 3. Describe, in words, what these expressions will match:
+
+-   <div>
+
+    `"(.)(.)\\2\\1"`
+
+    </div>
+
+This regex "`(.)(.)\\2\\1`" looks for a pattern where two characters are repeated in reverse order.
+
+`(.)(.)`creates two separate capturing groups from first two characters of the string. Let's call them group #1 for the first `(.)` and group#2 for second `(.)`
+
+`\\2` is a back reference for group #2 and checks if third character of the string matches the captured character in group #2.
+
+`\\1`is a back reference for group #1 and checks if fourth character of the string matches the captured character in group #1.
+
+Here is a code example of how regex `"(.)(.)\\2\\1"` works:
+
+```{r}
+x <- c("azza", "FEEF", "assd", "1221", "!??!", "#@@&")
+str_extract_all(x, "(.)(.)\\2\\1")
+
+```
+
+#### 4. Describe, in words, what these expressions will match:
+
+-   <div>
+
+    `(..)\1`
+
+    </div>
+
+Regex `(..)\1`is not gonna work because of the single backlash.
+
+Correct regex is `"(..)\\1".`
+
+`(..)` creates one capturing group from first two letter of the string.
+
+`\\1` is a reference back to the first captured group `(..)` and checks if third and fourth characters of the string matching to the group.
+
+Here is a code example of how regex `"(..)\1"` works:
+
+```{r echo=TRUE}
+x <- c("fafa", "KLKL", "fafe", "cdcdf", "1212", "1213", "@#@#", "@#@%")
+str_extract_all(x, "(..)\\1")
+```
+
+#### 5. Describe, in words, what this expression will match:
+
+<div>
+
+`"(.).\\1.\\1"`
+
+</div>
+
+`"(.).\\1.\\1"` regex looks for if first character repeated in third and fifth characters of the string. Second and fourth characters can be any characters.
+
+Here is a code example of how regex `"(.).\\1.\\1"`works:
+
+```{r}
+x <- c("acava", "ACAVA", "acave", "13151", "13152", "!@!%!", "!@!%&")
+str_extract_all(x, "(.).\\1.\\1")
+```
+
+#### 6. Describe, in words, what this expression will match:
+
+<div>
+
+`"(.)(.)(.).*\\3\\2\\1"`
+
+</div>
+
+`"(.)(.)(.).*\\3\\2\\1"`looks for first three characters at the beginning, any characters in the middle , and then those same three characters at the end, but in reverse order.
+
+`.*` means any amount of any characters
+
+`\\3\\2\\1` referencing to third, second and first captured groups.
+
+Here is a code example of how regex `"(.)(.)(.).*\\3\\2\\1"` works:
+
+```{r}
+x <- c("abchjlcba", "DFGjhrGFD", "DFGjhrGFA", "123jhkk321", "#@%345%@#", "#@%345%@?")
+str_view(x, "(.)(.)(.).*\\3\\2\\1")
+```
+
+#### 7. Construct regular expressions to match words that:
+
+-   Start and end with the same character.
+
+```{r}
+x <- c("abca", "MADAM", "DjhrA", "1jhkk1", "#345#", "#345?")
+str_view(x, "^(.).*\\1$")
+```
+
+-   Contain a repeated pair of letters (e.g. "church" contains "ch" repeated twice.)
+
+```{r}
+x <- c("church", "MAMA", "GGlkGGff", "GGlkGLff")
+str_view(x, "(..).*\\1\\.*")
+```
+
+-   Contain one letter repeated in at least three places (e.g. "eleven" contains three "e"s.)
+
+```{r}
+x <- c("abcafgajk", "AJHAIKAU", "abcath", "13615613")
+str_view(x, "(.).*\\1.*\\1")
+```
