@@ -1,0 +1,275 @@
+---
+title: "DATA607 PROJECT 1"
+author: "Farhod Ibragimov"
+date: "2025-02-23"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Loading libraries:
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(readr)
+library(data.table)
+library(kableExtra)
+```
+
+This code cell loading `tournamentinfo.txt` from GitHub URL and stores it into `data`
+
+```{r preparing-data}
+URL <- "https://raw.githubusercontent.com/farhodibr/CUNY-SPS-MSDS/main/DATA607/LAB5/tournamentinfo.txt"
+data <- readLines(URL)
+head(data)
+```
+
+This code cell creates a messy table from `data` and stores it into `elo_table` by doing:
+
+1.  `merging_lines`function iterates through each line and merges two lines into one. Function grabs first line and appends next line to it, then goes to next line and does same merging as in previous step. The reason i use this because each player's obseravtion is in two lines all over data set.
+2.  replacing all `"|"` with `","`
+
+```{r merging lines}
+
+data[length(data)] <- paste0(data[length(data)], "\n")
+data <- data[!grepl("^[-]+$", data)]
+head(data)
+merging_lines <- function(data) {
+  merged_data <- character(0)
+    for (i in seq(1, length(data) - 1, by = 2)) {
+        merged_line <- paste0(data[i], "|", data[i + 1])
+        merged_data <- c(merged_data, merged_line)
+  }
+  return(merged_data)
+}
+merged_data <- merging_lines(data)
+merged_data <- gsub("|", ",", merged_data, fixed = TRUE) 
+head(merged_data)
+```
+
+This cell does cleaning and formatting for column names. It creates `elo_table` data frame from `merged_data.`
+
+```{r}
+column_names <- strsplit(merged_data[1], split = ",", fixed = TRUE)
+column_names <- trimws(column_names)
+column_names <- gsub("\\s+", " ", column_names)
+
+
+print(column_names, quote = FALSE)
+print(typeof(column_names))
+#print(length(column_names))
+merged_data <- merged_data[-1]
+
+
+column_names <- c(" Pair ", " Player Name ", "Total", "Round 1", "Round 2", "Round 3", "Round 4", "Round 5", "Round 6", "Round 7", " ", " State ", " USCFID \ Rtg \ Pre \ Post ", " Pts ", " 1 ", " 2 ", " 3 ", " 4 ", " 5 ", " 6 ", " 7 ", " __ ")
+print(length(column_names))
+#merged_data <- merged_data[-1]
+elo_table <- data.frame(merged_data)
+
+elo_table <- elo_table |>
+  separate(col = 1,
+           into = column_names,
+           sep = ",",
+           extra = "merge")
+
+
+head(elo_table)
+#elo_table$pair <- as.numeric(unlist(elo_table$pair))
+elo_table <- Filter(function(x)!(all(x == "")), elo_table)
+elo_table <- elo_table |>
+  mutate(across(everything(), ~trimws(.x))) |>
+  mutate(across(everything(), ~gsub("\\s+", " ", .x))) |>
+  mutate(across(everything(), ~gsub(" +", " ", .x))) |>
+  mutate(across(everything(), ~gsub(" +$", "", .x))) |>
+  mutate(across(everything(), ~gsub("^ +", "", .x)))
+
+glimpse(elo_table)
+head(elo_table)
+```
+
+This cell cleans and format elo_table variable names, splits uscfid\_\_rtg\_\_pre\_\_post into separate variables.
+
+```{r elo_table}
+
+colnames(elo_table) <- tolower(colnames(elo_table))
+colnames(elo_table) <- trimws(colnames(elo_table))
+colnames(elo_table) <- str_replace_all(colnames(elo_table), " ", "_")
+print(colnames(elo_table))
+
+elo_table$pair <- elo_table$pair |>
+  as.numeric(unlist(elo_table$pair)) 
+  
+
+head(elo_table)
+```
+
+In this code cell I'm creating tables for players info an players ratings. Players rating table created by splitting uscfid\_\_rtg\_\_pre\_\_post column and its values into separate variables.
+
+```{r}
+
+players_info_table <- elo_table |>
+  select(pair, player_name, state, total)
+
+
+
+players_rating_table <- elo_table |>
+  select(pair, uscfid__rtg__pre__post) |>
+  extract(
+    col = uscfid__rtg__pre__post,
+    into = c("uscf_id", "rating", "new_rating"),
+    regex = "(\\d*)\\s*/\\s*R:\\s*(\\d*P?\\d*)\\s*->\\s*(\\d*P?\\d*)"
+  )|>
+  mutate(
+    rating = gsub("P.*", "", rating),            
+    new_rating = gsub("P.*", "", new_rating),  
+    across(c("rating", "new_rating"), as.numeric)  
+  )
+#|>
+ # mutate(across(c("uscf_id", "rating", "new_rating"), as.numeric))
+```
+
+Here I'm creating new rounds and rounds results tables. Rounds results table extracts only characters from rounds table values, such as "W" -won the game, "L" - lost, "D" - draw, and with the rest of characters for not played games.
+
+```{r}
+
+players_rating_table$pair <- elo_table$pair
+glimpse(players_rating_table)
+head(elo_table$player_name[5])
+
+
+new_row <- data.frame(pair = 0, uscf_id = "0", rating = 0, new_rating = 0, round_1 = 1,
+                      round_2 = 1, round_3 = 1,
+                      round_4 = 1, round_5 = 1,
+                      round_6 = 1, round_7 = 1)
+
+
+rounds_table <- elo_table |>
+  select(pair, starts_with("round")) |>
+  mutate(across(starts_with("round"), ~as.numeric(gsub("[^0-9]", "",.))))
+  
+#print(rounds_table)
+#print(elo_table)
+
+round_results_table <- elo_table |>
+  select(pair, starts_with("round")) |>
+  mutate(across(starts_with("round"), ~gsub("[^A-Z]", "",.x)))
+  
+
+
+
+rounds_table <- bind_rows(rounds_table, new_row[1])
+```
+
+This cell creates opponents_average_rating_table:
+
+1.   joining with players_rating_table
+2.   creates average variable for average ratings of played games opponent players.(this looks little bit complicated. I'm learning to get same results in less amount of code in future)
+3.  creates final_ratings_table with pair#, players name, player's state, total game points, player's rating, average rating of played opponents.
+
+```{r}
+
+opponents_average_rating_table <- left_join(players_rating_table, 
+                                            rounds_table,
+                                            by = "pair")
+opponents_average_rating_table <- rbind(opponents_average_rating_table, new_row)
+
+
+
+opponents_average_rating_table <- opponents_average_rating_table |>
+  rowwise() |>
+  mutate(average = round(mean( 
+           c(
+           opponents_average_rating_table$rating[
+             opponents_average_rating_table$round_1[pair]
+             ],
+           opponents_average_rating_table$rating[
+             opponents_average_rating_table$round_2[pair]
+             ],
+           opponents_average_rating_table$rating[
+             opponents_average_rating_table$round_3[pair]
+             ],
+           opponents_average_rating_table$rating[
+             opponents_average_rating_table$round_4[pair]
+             ],
+           opponents_average_rating_table$rating[
+             opponents_average_rating_table$round_5[pair]
+             ],
+           opponents_average_rating_table$rating[
+             opponents_average_rating_table$round_6[pair]
+             ],
+           opponents_average_rating_table$rating[
+             opponents_average_rating_table$round_7[pair]
+             ]
+           
+                     ),
+           na.rm = TRUE))) |>
+  ungroup()
+
+glimpse(opponents_average_rating_table)
+
+new_rating_table <- opponents_average_rating_table|>
+  select(pair, average) |>
+  slice(-n())
+
+final_ratings_table <- players_info_table|>
+  left_join(players_rating_table) |>
+  left_join(new_rating_table, by = "pair")|>
+  select(-new_rating, -uscf_id)
+head(final_ratings_table)
+
+final_ratings_table |>
+  head(10) |>
+  kable() |>
+  kable_styling(full_width = F)
+```
+
+This analysis will examine how the outcomes of chess games are influenced by the color of the pieces each player uses. I want to if there is any advantage or disadvantage associated with playing with white or black pieces.
+
+```{r}
+round_results_table_long <- round_results_table |>
+  pivot_longer(
+    cols = (!pair),
+    names_to = "round",
+    names_transform = list(round = ~gsub("[^0-9]", "", .x)),
+    values_to = "result"
+  ) |>
+  mutate(result = trimws(result))
+
+rounds_pcs_color_table <- elo_table |>
+  select(-(player_name:pts)) |>
+  pivot_longer(
+    cols = (!pair),
+    names_to = "round",
+    values_to = "pieces_color"
+  ) |>
+  mutate(pieces_color = trimws(pieces_color))
+
+wins_by_pcs_color_table <- round_results_table_long |>
+  left_join(rounds_pcs_color_table, by = c("pair", "round"))
+
+wins_by_pcs_color_table <- wins_by_pcs_color_table |>
+  mutate(white_win = ifelse(result == "W" & pieces_color == "W", TRUE,
+                            ifelse(result == "L" & pieces_color == "W", FALSE, NA)))
+
+table(wins_by_pcs_color_table$white_win)
+
+ggplot(wins_by_pcs_color_table, aes(x = white_win, fill = white_win)) +
+  geom_bar(stat = "count") +
+  labs(
+    title = "Distibution of white wins",
+    x = "Game results",
+    y = "Count"
+  ) +
+  theme_minimal() +
+  geom_text(stat = "count", aes(x = white_win,
+                                label = after_stat(count)),
+                                vjust = -0.5)
+  
+
+```
+
+As the bar plot shows, there is very small advantage of the color of starting pieces according to results of this dataset. As a chess players myself I believed that starting with white pieces is advantage. But this analysis puts doubt in it.
