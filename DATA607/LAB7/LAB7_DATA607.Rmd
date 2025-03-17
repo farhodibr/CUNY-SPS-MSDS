@@ -3,6 +3,7 @@ title: "LAB7_DATA607"
 author: "Farhod Ibragimov"
 date: "2025-03-11"
 output: html_document
+encoding: UTF-8
 ---
 
 ```{r setup, include=FALSE}
@@ -106,7 +107,10 @@ xml_doc <- lab7_to_xml(lab7_inventory_data)
 
 saveXML(xml_doc, file = "lab7_inventory.xml")
 
-#cat(saveXML(xml_doc))
+cat(readLines("lab7_inventory.xml"), sep = "\n")
+```
+
+```{r}
 
 # reading XML
 xml_doc <- xmlParse("lab7_inventory.xml")
@@ -152,8 +156,10 @@ This code creates `lab7_inventory.json`from dataframe. After that, code converts
 library(jsonlite)
 lab7_inventory_json <- toJSON(lab7_inventory_data)
 write(lab7_inventory_json, "lab7_inventory.json")
+cat(readLines("lab7_inventory.json"), sep = "\n")
+```
 
-
+```{r}
 json_data <- fromJSON("lab7_inventory.json")
 lab7_JSON_copy <- as.data.frame(json_data)
 head(lab7_JSON_copy)
@@ -181,6 +187,7 @@ html_output <- paste0("<html><head><title>Inventory</title></head><body>",
                       "</body></html>")
 
 writeLines(html_output, "lab7_inventory.html")
+cat(readLines("lab7_inventory.html"), sep = "\n")
 
 html_file <- read_html("lab7_inventory.html")
 tables <- html_file |>
@@ -205,6 +212,13 @@ This code creates `lab_7inventory.parquet` from dataframe. And after, code conve
 
 ```{r}
 write_parquet(lab7_inventory_data, "lab_7inventory.parquet")
+raw_data <- readBin("lab_7inventory.parquet", what = "raw", n = 100)
+
+# Print first 100 bytes
+print(raw_data)
+```
+
+```{r}
 
 df_parquet <- read_parquet("lab_7inventory.parquet")
 
