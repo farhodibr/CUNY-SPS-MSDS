@@ -1,0 +1,90 @@
+---
+title: "DATA607_WEEK9_API"
+author: "Farhod Ibragimov"
+date: "2025-03-29"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Loading libraries
+
+```{r}
+library(tidyverse)
+library(httr)
+library(jsonlite)
+```
+
+-   `httr`**:** Provides functions for working with HTTP, making it easy to send GET, POST, and other HTTP requests.
+
+-   `jsonlite`**:** Offers tools for parsing JSON data into R objects (like lists or data frames) and converting R objects into JSON.
+
+## Setting API URL and API key
+
+Here I'm creating API endpoint `/svc/mostpopular/v2/viewed/1.json` for *New York Times* most viewed articles for today.
+
+`api_key` includes API key.
+
+```{r}
+api_key <- "lucRAUjAeldYWSt6n8MQv9cGvbhwqSqr"
+api_url <- paste0("https://api.nytimes.com/svc/mostpopular/v2/viewed/1.json?api-key=", api_key)
+```
+
+## Sending GET request to the NYT API
+
+```{r}
+response <- GET(api_url)
+```
+
+`GET:`this function from `httr`package sends `HTTP GET` request to the URL defined by `api_url`.
+
+The result of the response is stored in `response` variable. It includes status information, headers, and the body of the response.
+
+## Checking the response status
+
+```{r}
+if(status_code(response) == 200) {
+  json_data <- content(response, as = "text", encoding = "UTF-8")
+  data_list <- fromJSON(json_data, flatten = TRUE)
+}else {
+  print("Error: Unable to fetch data from API")
+}
+```
+
+`status_code(response)`retrieves the HTTP status code from the response.
+
+`200`**:** Indicates a successful request. If the status code is 200, the code proceeds to parse the content. Otherwise, it prints an error message.
+
+## Extracting and parsing the JSON content:
+
+```{r}
+json_data <- content(response, as = "text", encoding = "UTF-8")
+data_list <- fromJSON(json_data, flatten = TRUE)
+print(data_list)
+```
+
+Here the code extracts the body of response as a text string.
+
+`UTF-8`ensures that characters are correctly interpreted.
+
+`fromJSON`converts the JSON text into `data_list`using `jsonlite.`
+
+## Converting data into a dataframe:
+
+```{r}
+articles_df <- as.data.frame(data_list$results)
+```
+
+The API’s JSON response typically contains a key called `results` where the actual articles or items are stored.
+
+## Displaying the dataframe:
+
+```{r}
+glimpse(articles_df)
+```
+
+```{r}
+print(head(articles_df))
+```
