@@ -1,0 +1,133 @@
+---
+title: "DATA 606 Data Project Proposal"
+author: "Farhod Ibragimov"
+output: pdf_document
+---
+
+### Data Preparation
+
+```{r setup, echo=TRUE, results='hide', warning=FALSE, message=FALSE}
+# load data
+bank_data <- read.csv("https://raw.githubusercontent.com/farhodibr/CUNY-SPS-MSDS/refs/heads/main/DATA606/PROJECT/PROPOSAL/bank.csv", sep = ";")
+?bank_data
+```
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+```
+
+```{r}
+head(bank_data)
+```
+
+```{r}
+glimpse(bank_data)
+```
+
+### Research question
+
+In this research project i want to see if we can predict if a client will subscribe to a term deposit (which is variable `'y'`) , based on factors such as age, job, marital status, education, and call duration.
+
+### Cases
+
+Each observation in database is a marketing call to the client. There are 4521 observations in this dataset.
+
+### Data collection
+
+The data is related with direct marketing campaigns (phone calls) of a Portuguese banking institution. 
+
+### Type of study
+
+This is an observational study.
+
+### Data Source
+
+This dataset is available at UCI machine learning repository
+
+### Describe your variables?
+
+There are total of 17 variables in this dataset. The table below shows type and description for each variable.
+
+| Variable | Type | Description |
+|-------------|-------------|---------------------------------------------|
+| age | Quantitative | Age of the client |
+| job | Qualitative | Type of job (e.g., admin., technician, etc.) |
+| marital | Qualitative | Marital status (e.g., married, single, divorced) |
+| education | Qualitative | Level of education (e.g., primary, secondary, tertiary) |
+| default | Qualitative | Has credit in default? (yes/no) |
+| balance | Quantitative | Average yearly balance in euros |
+| housing | Qualitative | Has housing loan? (yes/no) |
+| loan | Qualitative | Has personal loan? (yes/no) |
+| contact | Qualitative | Contact communication type (e.g., cellular, telephone) |
+| day | Quantitative | Last contact day of the month |
+| month | Qualitative | Last contact month of the year |
+| duration | Quantitative | Last contact duration in seconds |
+| campaign | Quantitative | Number of contacts during this campaign for this client |
+| pdays | Quantitative | Days since the client was last contacted (999 = never) |
+| previous | Quantitative | Number of contacts before this campaign |
+| poutcome | Qualitative | Outcome of the previous marketing campaign |
+| y | Qualitative | Has the client subscribed to a term deposit? (yes/no) (target var) |
+
+The dependent variable is `'y',`which is qualitive and indicatesif the client subscribed to a term deposit? (yes/no).
+
+All other variables will be tried and used as independent variables in this project.
+
+### Relevant summary statistics
+
+**Provide summary statistics for each the variables. Also include appropriate visualizations related to your research question (e.g. scatter plot, boxplots, etc). This step requires the use of R, hence a code chunk is provided below. Insert more code chunks as needed.**
+
+```{r}
+summary(bank_data)
+```
+
+### Plots.
+
+```{r}
+ggplot(bank_data, aes(x = age)) +
+  geom_histogram(fill = "orange", color = "blue") +
+  labs(title = "Distribution of clients age")
+```
+
+The distribution of clients age appears as close to normal, right-skewed meaning there more younger clients than older ones. Most clients age is in the range of 25 to 45 years old, with the highest mode of 32-33 years old.
+
+```{r}
+ggplot(bank_data, aes(x = balance)) +
+  geom_histogram(binwidth = 1000,  fill = "orange", color = "blue") +
+  labs(title = "Distribution of clients balances")
+```
+
+The distribution of balances is right-skewed. I can say that many clients have low and even negative balances. There few outliers, which indicate that few clients have extremely high balances.
+
+```{r}
+ggplot(bank_data, aes(x = duration)) +
+  geom_histogram(binwidth = 50, fill = "orange", color = "blue") +
+  labs(title = "Distribution of call durations in seconds",
+       x = "Call duration in seconds",
+       y = "Count")
+```
+
+Distribution of call durations in seconds is right-skewed with a long tail of longer calls. Most of calls duration is in the range of 50 - 500 seconds. There are few calls with extremely high durations
+
+```{r}
+ggplot(bank_data, aes(x = job)) +
+  geom_bar(fill = "orange") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title = "Distribution of job types")
+```
+
+From this plot we can see that majority of client are employed in blue-collar, management and technician types of job.
+
+```{r}
+ggplot(bank_data, aes(x = y)) +
+  geom_bar(fill = "orange") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title = "Distribution of current campaign outcomes",
+       x = "Outcome")
+```
+
+From this plot I can say that current campaign is not successfull, with very small amount of clients subscribed to a term deposit.
+
+### **Research question**
+
+I will use Logistics Regression to model if the customer subscribes to a term deposit (Variable y = "yes"). I will use the rest of variables as predictors.
