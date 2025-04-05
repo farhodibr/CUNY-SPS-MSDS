@@ -1,0 +1,133 @@
+---
+title: "LAB10_sentiment"
+author: "Farhod Ibragimov"
+date: "2025-04-05"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(tidytext)
+library(readr)
+library(ggplot2)
+library(syuzhet)
+library(dplyr)
+```
+
+## Loading data
+
+In this assignment I will do sentiment analysis using a dataset of hotel reviews. It will be done using sentiment lexicons from analysis example from Chapter 2 of "Text Mining with R", and additionally I will use another R package "syuzhet" for extra sentiment analysis.
+
+```{r}
+reviews_raw <- read_delim(
+  "https://raw.githubusercontent.com/farhodibr/CUNY-SPS-MSDS/main/DATA607/LAB10/DATA/REVIEWS/dataset-CalheirosMoroRita-2017.csv",
+  delim = ";",
+  locale = locale(encoding = "latin1")
+)
+
+# View structure
+glimpse(reviews_raw)
+
+# Create tidy tibble
+review_data <- tibble(line = 1:nrow(reviews_raw), text = reviews_raw$Review)
+
+# Tokenize
+tidy_reviews <- review_data |>
+  unnest_tokens(word, text)
+
+head(tidy_reviews)
+```
+
+## Sentiment analysis with "bing" library
+
+```{r}
+bing <- get_sentiments("bing")
+
+bing_sentiment <- tidy_reviews |>
+  inner_join(bing, by = "word") |>
+  count(sentiment, sort = TRUE)
+table(bing_sentiment)
+
+
+ggplot(bing_sentiment, aes(x = sentiment, y = n, fill = sentiment)) +
+  geom_col(show.legend = FALSE) +
+  labs(title = "Hotel review sentiment (Bing Lexicon)", x = "Sentiment", y = "Word Count")
+```
+
+The summary shows that more positive words were identified than negative ones, suggesting an overall favorable tone in the reviews. This bar plot visualizes the total number of positive vs. negative words. It confirms that positive sentiment dominates in the dataset.
+
+## NRC emotions.
+
+```{r}
+nrc <- get_sentiments("nrc")
+
+nrc_sentiment <- tidy_reviews |>
+  inner_join(nrc, by = "word") |>
+  count(sentiment, sort = TRUE)
+print(nrc_sentiment)
+
+ggplot(nrc_sentiment, aes(x = reorder(sentiment, n), y = n, fill = sentiment)) +
+  geom_col(show.legend = FALSE) +
+  coord_flip() +
+  labs(title = "Emotion distribution (NRC lexicon)", x = "Emotion", y = "Word count")
+```
+
+The most common emotions detected were positive, trust, and joy, showing that guests frequently express satisfaction and confidence in their stay. This horizontal bar chart displays the distribution of emotions. Emotions related to positivity and trust are most common, while negative emotions like disgust or fear are less frequent.
+
+## AFFIN analysis.
+
+```{r}
+afinn <- get_sentiments("afinn")
+
+afinn_sentiment <- tidy_reviews |>
+  inner_join(afinn, by = "word") |>
+  group_by(line) |>
+  summarise(sentiment_score = sum(value))
+print(afinn_sentiment)
+
+ggplot(afinn_sentiment, aes(x = sentiment_score)) +
+  geom_histogram(binwidth = 1, fill = "steelblue", color = "white") +
+  labs(title = "Distribution of sentiment scores (AFINN lexicon)", x = "Score per review", y = "Count")
+```
+
+This histogram shows the distribution of sentiment scores across reviews. Most reviews cluster on the positive side of the scale, with only a few strongly negative outliers.
+
+## Syuzhet analysis
+
+```{r}
+
+reviews_data <- reviews_raw$Review
+syuzhet_scores <- get_sentiment(reviews_data, method = "syuzhet")
+
+syuzhet_df <- tibble(
+  line = 1:length(syuzhet_scores),
+  sentiment = syuzhet_scores
+)
+
+ggplot(syuzhet_df, aes(x = line, y = sentiment)) +
+  geom_line(color = "darkgreen") +
+  labs(title = "Sentiment trajectory using Syuzhet lexicon",
+       x = "Review number", y = "Sentiment score")
+```
+
+Using the `syuzhet` lexicon, the code above computed sentiment scores at the review level, capturing subtle emotional changes across the dataset. These scores represent emotional valence based on narrative structure.
+
+The sentiment trajectory line plot shows how sentiment varies from review to review. While most reviews are slightly positive, there are occasional dips into negative sentiment. This provides a dynamic, narrative view of customer experiences.
+
+## Summary
+
+Overall, the hotel reviews show mostly positive sentiment across all the different tools are used.
+
+-   The **Bing** lexicon found more positive words than negative ones.
+
+-   The **NRC** lexicon showed that emotions like *trust, joy,* and *anticipation* were the most common, meaning people often felt good about their hotel experience.
+
+-   The **AFINN** scores gave each review a number, and most were on the positive side.
+
+-   The **Syuzhet** scores show how the tone expression of reviews changes from one to the next, and while most were positive, a few were more negative.
+
+    These different sentiment lexicon packages show that guest reviews are not describing just whether they were happy or unhappy, but also the kinds of emotions they expressed.
