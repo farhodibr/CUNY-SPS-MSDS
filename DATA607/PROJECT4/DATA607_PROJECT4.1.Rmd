@@ -1,0 +1,237 @@
+---
+title: "DATA607 Project 4"
+author: "Farhod Ibragimov"
+date: "2025-05-03"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Project Description
+
+In this project, I work on classifying news articles as either fake or true using logistic regression. I use small datasets from GitHub, clean and prepare the text, convert it to TF-IDF format, and train the model using tidymodels. I also tune the penalty parameter using cross-validation and evaluate the model using accuracy, AUC, confusion matrix, and ROC curve. Finally, I show the most informative words that help the model decide between fake and true news. This is a full machine learning pipeline, from loading the data to interpreting the results.
+
+## Libraries
+
+We load all required libraries for modeling, text processing, and evaluation.
+
+```{r}
+library(tidymodels)
+library(textrecipes)
+library(tidytext)
+library(yardstick)
+library(stringr)
+```
+
+## Load Datasets
+
+We read fake and true news CSV files from GitHub.
+
+```{r}
+url_fake_small <- "https://raw.githubusercontent.com/farhodibr/CUNY-SPS-MSDS/refs/heads/main/DATA607/PROJECT4/Fake_small.csv"
+url_true_small <- "https://raw.githubusercontent.com/farhodibr/CUNY-SPS-MSDS/refs/heads/main/DATA607/PROJECT4/True_small.csv"
+
+# Read CSVs into data frames
+df_fake <- as.data.frame(read.csv(url_fake_small))
+df_true <- as.data.frame(read.csv(url_true_small))
+```
+
+## Show Example Rows
+
+View the first row of each dataset to understand the structure.
+
+```{r}
+df_fake |> head(1)
+df_true |> head(1)
+```
+
+## Combine and Clean Data
+
+We add labels and join title + text columns. Missing values are handled.
+
+```{r}
+df_fake <- df_fake |> mutate(label = factor("fake"))
+df_true <- df_true |> mutate(label = factor("true"))
+
+# Combine and clean
+df_combined <- bind_rows(df_fake, df_true) |>
+  mutate(
+    title = ifelse(is.na(title), "", title),
+    text = ifelse(is.na(text), "", text),
+    full_text = paste(title, text, sep = " ")
+  ) |>
+  select(full_text, label) |>
+  mutate(doc_id = row_number()) |>
+  select(doc_id, full_text, label)
+```
+
+## Shuffle and View Sample
+
+Shuffle rows and preview 10 examples.
+
+```{r}
+set.seed(123)
+df_combined <- df_combined |> slice_sample(prop = 1)
+df_combined |> head(10)
+```
+
+## Train-Test Split
+
+We split the data (80% train / 20% test), stratified by label.
+
+```{r}
+df_model <- df_combined |> select(full_text, label)
+
+data_split <- initial_split(df_model, prop = 0.8, strata = label)
+train_data <- training(data_split)
+test_data <- testing(data_split)
+```
+
+## Text Preprocessing Recipe
+
+Create a recipe for tokenizing, removing stopwords, filtering vocabulary, and calculating TF-IDF.
+
+```{r}
+text_rec <- recipe(label ~ full_text, data = train_data) |>
+  step_tokenize(full_text) |>
+  step_stopwords(full_text) |>
+  step_tokenfilter(full_text, max_tokens = 5000) |>
+  step_tfidf(full_text)
+```
+
+## Define Model and Workflow
+
+Set up a logistic regression model with L1 regularization (lasso) and connect it to the recipe.
+
+```{r}
+log_model <- logistic_reg(penalty = tune(), mixture = 1) |>
+  set_engine("glmnet") |>
+  set_mode("classification")
+
+log_wflow <- workflow() |>
+  add_model(log_model) |>
+  add_recipe(text_rec)
+```
+
+## Cross-Validation Setup
+
+Use 5-fold cross-validation and create a small grid of penalty values for tuning.
+
+```{r}
+set.seed(321)
+folds <- vfold_cv(train_data, v = 5, strata = label)
+grid <- tibble(penalty = c(0.01, 0.1))
+
+metrics_to_use <- yardstick::metric_set(
+  yardstick::accuracy,
+  yardstick::roc_auc
+)
+```
+
+## Tune the Model
+
+Use tune_grid to evaluate model performance across the grid.
+
+```{r}
+tuned_res <- tune_grid(
+  log_wflow,
+  resamples = folds,
+  grid = grid,
+  metrics = metrics_to_use
+)
+```
+
+## Finalize Model
+
+Pick the best model and refit it on the full training set.
+
+```{r}
+best_model <- select_best(tuned_res, metric = "accuracy")
+final_wflow <- finalize_workflow(log_wflow, best_model)
+final_fit <- fit(final_wflow, data = train_data)
+```
+
+## Evaluate on Test Data
+
+Predict test set labels, calculate metrics, and show confusion matrix.
+
+```{r}
+results <- predict(final_fit, test_data, type = "prob") |>
+  bind_cols(predict(final_fit, test_data)) |>
+  bind_cols(test_data)
+
+metrics(results, truth = label, estimate = .pred_class)
+conf_mat(results, truth = label, estimate = .pred_class)
+```
+
+## Visualize Tuning Performance
+
+Show how accuracy changes across penalty values.
+
+```{r}
+autoplot(tuned_res) +
+  labs(
+    title = "Cross-Validation Accuracy vs Penalty",
+    x = "Penalty (Lambda)",
+    y = "Accuracy"
+  ) +
+  theme_minimal()
+```
+
+## Confusion Matrix Heatmap
+
+Visual plot of confusion matrix for easier interpretation.
+
+```{r}
+predict(final_fit, test_data) |>
+  bind_cols(test_data) |>
+  conf_mat(truth = label, estimate = .pred_class) |>
+  autoplot(type = "heatmap") +
+  labs(title = "Confusion Matrix", subtitle = "Fake vs True") +
+  theme_minimal()
+```
+
+## ROC Curve
+
+Show trade-off between true positive and false positive rate.
+
+```{r}
+roc_curve(results, truth = label, .pred_fake) |>
+  autoplot() +
+  labs(title = "ROC Curve", subtitle = "Fake News = Positive Class") +
+  theme_minimal()
+```
+
+## Top TF-IDF Words by Label
+
+Highlight the most informative words by label using TF-IDF.
+
+```{r}
+tidy_tokens <- train_data |>
+  unnest_tokens(word, full_text) |>
+  anti_join(stop_words, by = "word") |>
+  filter(str_length(word) > 2) |>
+  count(label, word, sort = TRUE) |>
+  bind_tf_idf(term = word, document = label, n = n)
+
+top_words <- tidy_tokens |>
+  group_by(label) |>
+  slice_max(tf_idf, n = 15, with_ties = FALSE) |>
+  ungroup()
+
+ggplot(top_words, aes(x = tf_idf, y = reorder_within(word, tf_idf, label))) +
+  geom_col(aes(fill = label), show.legend = FALSE) +
+  facet_wrap(~ label, scales = "free_y") +
+  scale_y_reordered() +
+  labs(title = "Top TF-IDF Words by Label", x = "TF-IDF Score", y = "Word") +
+  theme_minimal()
+```
+
+## Conclusion
+
+-   We trained a logistic regression model to classify news as fake or true.
+-   TF-IDF was used to turn text into numeric features.
+-   We evaluated the model using accuracy, AUC, ROC curve, and top word plots.
+-   Next step: try more models like Random Forest or XGBoost.
