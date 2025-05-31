@@ -1,0 +1,405 @@
+---
+title: "Untitled"
+author: "Farhod Ibragimov"
+date: "2025-05-03"
+output: slidy_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r}
+library(dplyr)
+library(knitr)
+library(stringr)
+library(rsample)
+library(tidytext)
+library(Matrix)
+library(glmnet)
+library(doParallel)
+library(yardstick)
+```
+
+## Loading the data
+
+```{r}
+url_fake_small <- "https://raw.githubusercontent.com/farhodibr/CUNY-SPS-MSDS/refs/heads/main/DATA607/PROJECT4/Fake_small.csv"
+url_true_small <- "https://raw.githubusercontent.com/farhodibr/CUNY-SPS-MSDS/refs/heads/main/DATA607/PROJECT4/True_small.csv"
+```
+
+```{r}
+df_fake <- as.data.frame(
+  read.csv(url_fake_small)
+  )
+df_true <- as.data.frame(
+  read.csv(url_true_small)
+)
+```
+
+```{r}
+df_fake |>
+  head(1)|>
+  kable(caption = "First  row of fake news dataset")
+```
+
+## 
+
+```{r}
+df_true|>
+  head(1)|>
+  kable(caption = "First row of true news dataset")
+```
+
+## 
+
+```{r}
+df_fake <-
+  df_fake |>
+  mutate(label = factor("fake"))
+
+df_true <- df_true |>
+  mutate(label = factor("true"))
+
+df_combined <- bind_rows(df_fake, df_true)
+
+df_combined <- df_combined |>
+  mutate(
+    title  = ifelse(is.na(title),"", title),
+    text = ifelse(is.na(text), "", text),
+    full_text = paste(title, text, sep = " ")
+  )
+
+df_combined <- df_combined |>
+  select(full_text, label)|>
+  mutate(doc_id = row_number())|>
+  select(doc_id, full_text, label)
+
+set.seed(123)
+
+df_combined <- df_combined|>
+  slice_sample(prop = 1)
+
+df_combined|>
+  head(10)|>
+  slice_sample(prop = 1)|>
+  mutate(full_text = str_trunc(full_text, 
+                               width = 80, 
+                               side = "right",
+                               ellipsis = "..."))|>
+  kable(caption = "First 10 rows of combined and shuffled data")
+
+
+```
+
+## Splitting combined dataset into training and testing datasets
+
+```{r}
+data_split <- initial_split(df_combined, 
+                            prop = 0.80,
+                            strata = label)
+
+train_data <- training(data_split)
+test_data <- testing(data_split)
+
+table(train_data$label) |>
+  kable(col.names = c("Label", "Count"),
+        caption = "Distribution in training data")
+
+table(test_data$label)|>
+  kable(col.names = c("Label", "Count"),
+        caption = "Distribution in test data")
+  
+```
+
+## Converting the raw text into numerical features
+
+```{r}
+
+VOCAB_SIZE <- 5000
+
+# --- Process Training Data ---
+print("--- Processing Training Data ---")
+print("Tokenizing training text...")
+tidy_train <- train_data |>
+  # unnest_tokens splits text into words (tokens), converting to lowercase by default
+  unnest_tokens(output = word, input = full_text)
+
+print("Removing stop words and cleaning tokens...")
+tidy_train <- tidy_train |>
+  # Remove common English stop words using the list from tidytext
+  anti_join(stop_words, by = "word") |>
+  # Remove tokens that are just numbers
+  filter(!str_detect(word, "^[0-9]+$")) |>
+  # Remove very short tokens (e.g., 1 or 2 characters)
+  filter(nchar(word) > 2)
+
+print("Counting word frequencies per document...")
+word_counts_train <- tidy_train |>
+  count(doc_id, word, sort = TRUE)
+
+# --- Determine Top Words (Vocabulary) from Training Data Only ---
+print(paste("Determining top", VOCAB_SIZE, "words for vocabulary..."))
+top_words <- word_counts_train |>
+  # Sum word counts across all training documents
+  group_by(word) |>
+  summarise(total_n = sum(n)) |>
+  # Get the top N words
+  slice_max(total_n, n = VOCAB_SIZE, with_ties = FALSE) |>
+  # Pull out the words themselves into a vector
+  pull(word)
+
+# Filter training counts to only include words in our vocabulary
+word_counts_train_vocab <- word_counts_train |>
+  filter(word %in% top_words)
+
+# --- Calculate TF-IDF for Training Data ---
+print("Calculating TF-IDF for training data...")
+train_tf_idf <- word_counts_train_vocab |>
+  # Calculate term frequency, inverse document frequency, and TF-IDF
+  bind_tf_idf(term = word, document = doc_id, n = n)
+
+# --- Create Sparse Matrix for Training Data ---
+print("Creating sparse matrix for training data...")
+train_sparse <- train_tf_idf |>
+  # Rows: doc_id, Columns: word, Cell values: tf_idf
+  cast_sparse(row = doc_id, column = word, value = tf_idf)
+
+# Ensure all documents from original train_data are rows in the matrix
+# (Adds rows of zeros for docs that had no words left after filtering/vocabulary)
+train_doc_ids <- train_data$doc_id
+# Find doc_ids present in the matrix rownames
+matrix_train_rows <- as.numeric(rownames(train_sparse))
+# Find doc_ids from original train_data NOT yet in the matrix
+missing_train_rows <- setdiff(train_doc_ids, matrix_train_rows)
+
+if(length(missing_train_rows) > 0) {
+  print(paste("Adding", length(missing_train_rows), "rows of zeros for documents with no features..."))
+  # Create a zero matrix for the missing rows with the correct number of columns
+  zero_matrix_train <- Matrix(0,
+                              nrow = length(missing_train_rows),
+                              ncol = ncol(train_sparse),
+                              sparse = TRUE,
+                              dimnames = list(as.character(missing_train_rows), colnames(train_sparse)))
+  # Combine the original sparse matrix with the new zero rows
+  train_sparse <- rbind(train_sparse, zero_matrix_train)
+}
+
+# Reorder rows to match the original train_data order (important for matching labels later)
+train_sparse <- train_sparse[as.character(train_data$doc_id), ]
+print("Training sparse matrix created.")
+print(paste("Training matrix dimensions (docs, words):", paste(dim(train_sparse), collapse = " x ")))
+
+
+# --- Process Test Data (Apply steps using Training Vocabulary) ---
+print("\n--- Processing Test Data ---")
+print("Tokenizing test text...")
+tidy_test <- test_data |>
+  unnest_tokens(output = word, input = full_text)
+
+print("Removing stop words and cleaning tokens...")
+tidy_test <- tidy_test |>
+  anti_join(stop_words, by = "word") |>
+  filter(!str_detect(word, "^[0-9]+$")) |>
+  filter(nchar(word) > 2)
+
+print("Counting word frequencies (using training vocabulary)...")
+# IMPORTANT: Only count words that are in the vocabulary learned from training data
+word_counts_test_vocab <- tidy_test |>
+  filter(word %in% top_words) |>
+  count(doc_id, word, sort = TRUE)
+
+# --- Calculate TF-IDF for Test Data ---
+print("Calculating TF-IDF for test data...")
+# Note: IDF is calculated based on terms present in test docs after filtering.
+test_tf_idf <- word_counts_test_vocab |>
+   bind_tf_idf(term = word, document = doc_id, n = n)
+
+# --- Create Sparse Matrix for Test Data ---
+print("Creating sparse matrix for test data...")
+test_sparse <- test_tf_idf |>
+  cast_sparse(row = doc_id, column = word, value = tf_idf)
+
+# --- Align Test Matrix Columns with Training Matrix Columns ---
+print("Aligning test matrix columns with training matrix...")
+# Get column names (words) from both matrices
+train_cols <- colnames(train_sparse)
+test_cols <- colnames(test_sparse)
+
+# Find columns missing in test matrix that are in training matrix
+missing_cols_in_test <- setdiff(train_cols, test_cols)
+if (length(missing_cols_in_test) > 0) {
+  # Create zero columns for missing words
+   zero_cols_matrix <- Matrix(0,
+                             nrow = nrow(test_sparse),
+                             ncol = length(missing_cols_in_test),
+                             sparse = TRUE,
+                             dimnames = list(rownames(test_sparse), missing_cols_in_test))
+   # Add these zero columns to the test matrix
+   test_sparse <- cbind(test_sparse, zero_cols_matrix)
+   print(paste("Added", length(missing_cols_in_test), "zero columns to test matrix."))
+}
+
+# Find columns present in test matrix but NOT in training matrix (shouldn't happen if filtered correctly, but check)
+extra_cols_in_test <- setdiff(test_cols, train_cols)
+ if (length(extra_cols_in_test) > 0) {
+   print(paste("Warning: Found", length(extra_cols_in_test), "extra columns in test matrix. Removing them."))
+   # Remove columns from test matrix that are not in training matrix vocabulary
+   test_sparse <- test_sparse[, train_cols]
+}
+
+# Ensure column order in test matrix exactly matches training matrix
+test_sparse <- test_sparse[, train_cols]
+
+# Ensure all documents from original test_data are rows in the matrix
+test_doc_ids <- test_data$doc_id
+matrix_test_rows <- as.numeric(rownames(test_sparse))
+missing_test_rows <- setdiff(test_doc_ids, matrix_test_rows)
+
+if(length(missing_test_rows) > 0) {
+   print(paste("Adding", length(missing_test_rows), "rows of zeros for documents with no features..."))
+   zero_matrix_test <- Matrix(0,
+                             nrow = length(missing_test_rows),
+                             ncol = ncol(test_sparse),
+                             sparse = TRUE,
+                             dimnames = list(as.character(missing_test_rows), colnames(test_sparse)))
+  test_sparse <- rbind(test_sparse, zero_matrix_test)
+}
+
+# Reorder rows to match the original test_data order
+test_sparse <- test_sparse[as.character(test_data$doc_id), ]
+print("Test sparse matrix created and aligned.")
+print(paste("Test matrix dimensions (docs, words):", paste(dim(test_sparse), collapse = " x ")))
+
+
+```
+
+## Train a Classification Model (Logistic Regression)
+
+```{r}
+y_train <- train_data$label
+
+registerDoParallel(cores = detectCores() - 1)
+
+set.seed(321)
+
+cross_validation_model <- cv.glmnet(x = train_sparse,
+                                    y = y_train,
+                                    family = "binomial",
+                                    alpha = 1,
+                                    parallel = TRUE)
+stopImplicitCluster()
+
+plot(cross_validation_model)
+
+lambda_optimal <- cross_validation_model$lambda.1se
+
+print(paste("Optimal lambda (lambda.1se) found:", round(lambda_optimal, 6)))
+print(paste("Minimum lambda (lambda.min):", round(cross_validation_model$lambda.min, 6)))
+```
+
+## 
+
+## Evaluate the model on the test data
+
+```{r}
+library(ggplot2)
+y_test <- test_data$label
+
+prediction_prob <- predict(cross_validation_model,
+                           newx = test_sparse,
+                           s = lambda_optimal,
+                           type = "response")
+
+predicted_labels <- factor(ifelse(prediction_prob > 0.5, "true", "fake"),
+                           levels = levels(y_test))
+
+results_df <- data.frame(
+  truth = y_test,
+  estimate = predicted_labels
+)
+
+accuracy_val <- accuracy(results_df,
+                         truth = truth,
+                         estimate = estimate)
+
+print(paste("Overall accuracy:", round(accuracy_val$.estimate, 4)))
+
+conf_matrix <- conf_mat(results_df,
+                        truth = truth,
+                        estimate = estimate)
+
+print(conf_matrix)
+
+autoplot(conf_matrix, type = "heatmap") +
+  scale_fill_gradient(low = "lightblue", high = "blue") + # Using standard R color names
+  labs(
+       title = "Confusion Matrix: Fake vs True News",
+       subtitle = "Performance on Test Set",
+       x = "Predicted Label",
+       y = "Actual Label"
+       ) +
+  theme_minimal()
+```
+
+
+## Most used words in fake and true news plots
+
+
+```{r}
+library(ggplot2)
+
+# Perform tokenization and cleaning similar to Step 4
+words_by_label <- df_combined %>%
+  unnest_tokens(output = word, input = full_text) %>%
+  anti_join(stop_words, by = "word") %>%
+  filter(!str_detect(word, "^[0-9]+$")) %>% # Remove numbers
+  filter(nchar(word) > 2) # Remove short words
+
+
+word_counts_by_label <- words_by_label %>%
+  count(label, word, sort = TRUE) %>%
+  ungroup() # Ungroup for later operations
+
+# Define how many top words to show per category
+N_top_words <- 15
+
+print(paste("Selecting top", N_top_words, "words per label for plotting..."))
+plot_data <- word_counts_by_label %>%
+  group_by(label) %>%                 # Process each label independently
+  slice_max(n, n = N_top_words, with_ties=FALSE) %>% # Get top N words by count 'n'
+  ungroup() %>%
+  # Reorder word factor levels based on frequency within each label for plotting
+  mutate(word = reorder_within(word, n, label))
+
+word_freq_plot <- ggplot(plot_data, aes(x = n, y = word, fill = label)) +
+  geom_col(show.legend = FALSE) + # Create bar chart columns
+  # Use facet_wrap to create separate plots for each label
+  # scales = "free_y" allows y-axis (words) to be different for each plot
+  facet_wrap(~label, scales = "free_y") +
+  # Apply the reordering within facets
+  scale_y_reordered() +
+  # Add labels and title
+  labs(title = paste("Top", N_top_words, "Most Frequent Words by News Type"),
+       subtitle = "(After removing stopwords and short/numeric tokens)",
+       x = "Frequency (Count)",
+       y = "Word") +
+  # Use a minimal theme
+  theme_minimal()
+
+# Print the plot to display it
+print(word_freq_plot)
+
+
+word_counts_by_label %>%
+    filter(label == "fake") %>%
+    head(N_top_words) %>%
+    kable(caption = paste("Top", N_top_words, "Fake News Words"))
+
+print(paste("\nTop", N_top_words, "words for 'true' news:"))
+ word_counts_by_label %>%
+    filter(label == "true") %>%
+    head(N_top_words) %>%
+    kable(caption = paste("Top", N_top_words, "True News Words"))
+```
+

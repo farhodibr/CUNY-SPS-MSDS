@@ -1,0 +1,138 @@
+---
+title: "Project_2_DATA_607 Emissions dataset tidying"
+author: "Farhod Ibragimov"
+date: "2025-03-03"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(tidyr)
+library(dplyr)
+library(readr)
+library(data.table)
+library(maps)
+library(sf)
+```
+
+## Tidying and cleaning data
+
+Why do I think this dataset is not tidy:
+
+-   Multiple variables in separate columns. Each row should represent a single observation (e.g., emissions for a specific region, item, and year), but this is not the case here.
+
+-   Years as columns. \
+    \
+    This code loads dataset, also it cleans and transform data:
+
+```{r}
+emissions_data <- read.csv("https://raw.githubusercontent.com/farhodibr/CUNY-SPS-MSDS/refs/heads/main/DATA607/PROJECT2/Total%20Emissions%20Per%20Country%20(2000-2020)%20(1).csv")
+
+head(emissions_data)
+
+
+year_cols <- grep("^X2", colnames(emissions_data), value = TRUE)
+emissions_data <- emissions_data |>
+  distinct(across(all_of(starts_with("X2"))), .keep_all = TRUE)
+
+
+format_element <- function(x) {
+  letters_match <- str_extract(x, "(?i)(CO2eq|N2O|CH4|CO2)")
+  clean_txt <- str_remove(x, "(?i)(CO2eq|N2O|CH4|CO2)\\s*") |>
+    str_remove_all("(?i)\\bemissions\\b")
+  
+  clean_txt <- str_to_lower(clean_txt) |>
+    str_replace_all("\\s+", "_") |>
+    str_replace_all("[^a-z0-9_]", "")|>
+    str_replace_all("_$", "")
+  
+  result <- if(!is.na(letters_match) &letters_match !="") {
+    str_c(letters_match, clean_txt, sep = "_")
+  } else {
+    clean_txt
+  }
+  
+  result <- str_replace_all(result, "(?i)\\bn2o\\b", "N2O")
+  result <- str_replace_all(result, "(?i)\\bch4\\b", "CH4")
+  result <- str_replace_all(result, "(?i)\\bar5\\b", "AR5")
+  result <- str_replace_all(result, "(?i)\\bco2\\b", "CO2")
+  result <- str_replace_all(result, "_$", "")
+  
+  return(result)
+}
+
+colnames(emissions_data) <- str_remove_all(colnames(emissions_data), "(?i)^X")
+
+emissions_data <- emissions_data |>
+  mutate(Element = map_chr(Element, format_element)) |>
+  drop_na()
+head(emissions_data)
+```
+
+```{r}
+split_row <- 31406
+
+emissions_data_by_countries <- emissions_data[1:split_row, ]
+emissions_data_by_continents <- emissions_data[(split_row +1):nrow(emissions_data), ]
+```
+
+Here I am creating tidy data table:
+
+```{r}
+emissions_data_long <- emissions_data_by_countries |>
+  
+  pivot_longer(
+    cols = starts_with("2"),
+    names_to = "Year",
+    values_to = "Emission"
+  ) |>
+  drop_na()
+colnames(emissions_data_long) <- str_to_lower(colnames(emissions_data_long))
+emissions_data_long$year <- as.numeric(emissions_data_long$year)
+emissions_data_long$emission <- round(emissions_data_long$emission, 2)
+
+unique_areas <- unique(emissions_data_long$area)
+#print(unique_areas)
+#write.csv(emissions_data_long, "emissions_data_long.csv", row.names = FALSE)
+head(emissions_data_long)
+
+
+```
+
+This dataset is tidy because:
+
+-   Each variable has its own column. The columns represent individual variables: `area`, `item`, `element`, `unit`, `year`, and `emission`. Each column holds one type of data.
+
+-   Each observation has its own row. This makes it easier for analysis.
+
+## Analysis
+
+Here I do analysis for top 10 countries for volumes of emission they produce:
+
+```{r}
+#total emissions by country
+total_emissions_by_country <- emissions_data_long |>
+  group_by(area) |>
+  summarise(total_emission = sum(emission, na.rm = TRUE)) |>
+  arrange(desc(total_emission))
+
+top10_emissions <- total_emissions_by_country |>
+  top_n(10, total_emission)
+
+ggplot(top10_emissions, aes(x = reorder(area, total_emission), 
+                                       y = total_emission)) +
+  geom_bar(stat = "identity", fill = "steelblue")+
+  scale_y_continuous(trans = "log10")+
+  coord_flip() +
+  labs(title = "Top Total Emissions by Country 2000 - 2020",
+       x= "Country",
+       y = "Total Emissions (Kilotones)")+
+  theme_minimal()+
+  theme(axis.text.y = element_text(angle = 45, hjust = 1))
+```
+
+In this plot we see top 10 countries with highest amounts of emissions produced in years 2000 - 2020.

@@ -1,0 +1,136 @@
+---
+title: "Cola"
+author: "Farhod Ibragimov"
+date: "2025-03-09"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Tidying "Cola" dataset
+
+```{r}
+library(tidyverse)
+library(readr)
+```
+
+```{r}
+data <- read.csv("https://raw.githubusercontent.com/farhodibr/CUNY-SPS-MSDS/refs/heads/main/DATA607/PROJECT2/Cola.csv")
+head(data)
+```
+
+Why is this dataset untidy:
+
+-   Multiple variables in separate rows: The dataset contains various variables that are scattered across rows.
+
+-   Fiscal years as columns
+
+This dataset is big and could use a lot of tidying and broken down into separate tidy data tables. I will just use Profit & Loss statement to create tidy data table as example.
+
+```{r}
+profit_data <- data |>
+  slice(4:6) |>
+  select(!Data.provided.by.SimFin)
+print(profit_data)
+```
+
+Here I am cleaning and formating rows and column names:
+
+```{r}
+colnames(profit_data) <- tolower(gsub(" ", "_", colnames(profit_data)))
+profit_data$x <- tolower(gsub(" ", "_", profit_data$x))
+
+profit_data <- profit_data |>
+  mutate(across(where(is.character), ~ tolower(.)))
+
+profit_data <- profit_data |>
+  rename( profit_loss = x)
+         
+print(profit_data)
+```
+
+This code first create a long table, and after I am making it wide to make it tidy:
+
+```{r}
+profit_data_tidy <- profit_data |>
+  pivot_longer(
+    col = starts_with("x"),
+    names_to = "period",
+    values_to = "amount"
+  ) |>
+  group_by(profit_loss, period)
+head(profit_data_tidy)
+profit_data_tidy$amount <- as.numeric(gsub(",", "", profit_data_tidy$amount))
+profit_data_tidy$period <- as.numeric(gsub("x.", "", profit_data_tidy$period)) + 2000
+
+profit_data_tidy <- profit_data_tidy |>
+  pivot_wider(
+    names_from = profit_loss,
+    values_from = amount
+  )
+head(profit_data_tidy)
+```
+
+Why is this dataset is tidy?
+
+-   Each row represents a single observation which corresponds to a specific period (year 2001, 2002, etc.), making it easy to analyze trends or patterns over time.
+
+-   The dataset has separate columns for `period`, `net_operating_revenues`, `cost_of_goods_sold`, and `gross_profit`, which allows each variable to be analyzed independently.
+
+## Analysis
+
+Here is the plot showing financial performance over time:
+
+```{r}
+#profit_data_tidy$period <- as.factor(profit_data_tidy$period)
+
+profit_data_tidy$net_operating_revenues <- as.numeric(profit_data_tidy$net_operating_revenues)
+profit_data_tidy$cost_of_goods_sold <- as.numeric(profit_data_tidy$cost_of_goods_sold)
+profit_data_tidy$gross_profit <- as.numeric(profit_data_tidy$gross_profit)
+
+ggplot(profit_data_tidy, aes(x = period)) + 
+  geom_line(aes(y = net_operating_revenues, 
+                color = "Net Operating Revenues", group = 1), 
+                linewidth = 1) + 
+  geom_line(aes(y = cost_of_goods_sold, 
+                color = "Cost of Goods Sold", group = 1), 
+                linewidth = 1) +
+  geom_line(aes(y = gross_profit, 
+                color = "Gross Profit", group = 1), 
+                linewidth = 1) +
+  labs(title = "Trend Analysis: Financial Performance Over Time",
+       x = "Period", 
+       y = "Amount (in USD)",
+       color = "Legend") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+From this plot I can say:
+
+-   Revenue increased from 2001 to 2004. From 2005 it started to decline and in 2010 revenue was approximately same as in 2001.
+
+This plot analyze profit margin over the years
+
+```{r}
+profit_data_tidy <- profit_data_tidy |>
+  mutate(gross_profit_margin = (gross_profit / net_operating_revenues) * 100)
+
+profit_data_tidy$period <- as.numeric(as.character(profit_data_tidy$period))
+
+print(profit_data_tidy)
+
+ggplot(profit_data_tidy, aes(x = period, y = gross_profit_margin)) +
+  geom_point(color = "red") + 
+  geom_line(color = "blue", linewidth = 1) +
+  labs(title = "Gross Profit Margin Over Time",
+       x = "Period", y = "Gross Profit Margin (%)") +
+  scale_x_continuous(breaks = seq(min(profit_data_tidy$period), max(profit_data_tidy$period), by = 1),
+                     labels = as.character(seq(min(profit_data_tidy$period), max(profit_data_tidy$period), by = 1))) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+Profit margin declined significantly in years of 2002-2004, which is interesting. Because from the previous plot we can see that revenues peak is in 2004. As we can see from 2007 profit margin steadily increasing.

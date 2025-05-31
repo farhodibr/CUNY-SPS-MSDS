@@ -1,0 +1,265 @@
+---
+title: "Tidying US Census dataset"
+author: "Farhod Ibragimov"
+date: "2025-03-04"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(usmap)
+library(dplyr)
+
+```
+
+## Tidying dataset
+
+```{r}
+census_data <- read.csv("https://raw.githubusercontent.com/farhodibr/CUNY-SPS-MSDS/refs/heads/main/DATA607/PROJECT2/US_Census_Data.csv")
+
+census_data <- census_data |>
+  select(-Fact.Note)
+glimpse(census_data)
+```
+
+Why do I think this dataset is not tidy:
+
+-   **Multiple variables in one column**: \
+    "Fact" column contains several descriptions of the data, which needs to be separate to be tidy
+
+-   States supposed to be rows (observations), not columns.
+
+-   Each row represents multiple observations. In tidy dataset each row represents single observation, for example a specific state's demographic data for a single year.
+
+Here I create separate tidy data table for populations of each state in years 2010 and 2016
+
+```{r}
+
+state_names <- colnames(census_data)[3:ncol(census_data)]
+#state_names
+
+population_data <- census_data |>
+  filter(Fact %in% c("Population estimates, July 1, 2016,  (V2016)", 
+                     "Population, Census, April 1, 2010"))
+
+long_population_data <- population_data |>
+  pivot_longer(
+    cols = -Fact,
+    names_to = "state",
+    values_to = "population"
+  ) |>
+  mutate(year = case_when(
+    grepl("2016", Fact) ~2016,
+    grepl("2010", Fact) ~ 2010,
+    TRUE ~ NA_integer_
+  )) |>
+  select(-Fact) |>
+  pivot_wider(
+    names_from = year,
+    values_from = population
+   ) |>
+  # |>
+  # mutate(
+  #   `2010` = as.numeric(`2010`),
+  #   `2016` = as.numeric(`2016`)
+  # )
+  select(state, "2010", "2016")
+
+long_population_data$`2010` <- gsub(",", "", long_population_data$`2010`)
+long_population_data$`2010` <-  as.numeric(long_population_data$`2010`)
+
+long_population_data$`2016` <- gsub(",", "", long_population_data$`2016`)
+long_population_data$`2016` <-  as.numeric(long_population_data$`2016`)
+print(long_population_data)
+```
+
+This `long_population_data`data table is tidy and ready for analysis.
+
+In this code I created `create_long_table`function which makes it easier to create different tidy data tables:
+
+```{r}
+create_long_table <- function(column_name, rows) {
+  result <- census_data |>
+  slice(rows) |>
+  pivot_longer(
+    cols = !Fact,
+    names_to = "state",
+    values_to = column_name
+  ) |>
+   mutate(year = case_when(
+    grepl("2016", Fact) ~2016,
+    grepl("2010", Fact) ~ 2010,
+    TRUE ~ NA_integer_
+  )) |>
+  select(-Fact) |>
+  select(state, year, all_of(column_name)) |>
+  mutate(
+    !!column_name := round(as.numeric(gsub("%", "", !!sym(column_name))), 2)
+    )
+  
+  return(result)
+}
+
+
+```
+
+Here I create `gender_table_long`tidy data table which includes female population proportions for each state in years 2010 and 2016. I use `create_long_table`to create this table. Also I did data transformation because some states had proportions in percents, and some decimal values as actual proportions.
+
+```{r}
+gender_table_long <- create_long_table("female_prop", 11:12) 
+gender_table_long <- gender_table_long |>
+  mutate(
+    female_prop = if_else(
+                          female_prop < 1,
+                          round(female_prop * 100, 2),
+                          round(female_prop, 2)
+  ))
+print(gender_table_long)
+
+
+
+```
+
+This code creates new observations in `gender_table_long` for male population for each state which is better for analysis.
+
+```{r}
+gender_table_long|>
+  mutate(
+    male_prop = 100 - female_prop
+  ) |>
+  pivot_longer(
+    cols = contains("prop"),
+    names_to = "gender",
+    values_to = "value"
+  ) |>
+  pivot_wider(
+    names_from = year,
+    values_from = value,
+    names_prefix = "X"
+  ) |>
+  select(state, gender, X2010, X2016) |>
+  mutate(
+    prop_change = X2016 - X2010
+  )
+head(gender_table_long)
+```
+
+From here I created few data tables for different age ranges:
+
+```{r}
+under_5_proportions_long <- create_long_table("prop_under_5", 5:6) |>
+  group_by(year, state)
+print(under_5_proportions_long)
+```
+
+```{r}
+under_18_proportions_long <- create_long_table("prop_under_18", 7:8)
+print(under_18_proportions_long)
+```
+
+```{r}
+over_65_proportions_long <- create_long_table("over_65", 9:10)
+print(over_65_proportions_long)
+```
+
+```{r}
+population_proportions <- under_5_proportions_long |>
+  left_join(under_18_proportions_long, by = c("state", "year")) |>
+  left_join(over_65_proportions_long, c("state", "year")) |>
+  mutate(
+    prop_18_to_65 = 100 - prop_under_18 - over_65
+  )
+```
+
+This code creates data table for population proportions in 18-65 ages range for each state
+
+```{r}
+population_18_65_long <- population_proportions |>
+  select(state, year, prop_18_to_65)
+print(population_18_65_long)
+```
+
+```{r}
+
+
+
+```
+
+## Analysis
+
+This plot shows analysis for each state's population in 2010.
+
+```{r}
+library(usmap)
+long_population_data$state <- gsub("\\.", " ", long_population_data$state) 
+
+names(long_population_data)[names(long_population_data) == "2010"] <- "pop_2010"
+names(long_population_data)[names(long_population_data) == "2016"] <- "pop_2016"
+
+data_for_map <- long_population_data |>
+  left_join(usmap::statepop, by = c("state" = "full"))
+
+mismatches <- setdiff(long_population_data$state, usmap::statepop$full)
+print(mismatches)
+
+# long_population_data$state <- trimws(long_population_data$state)
+# usmap::statepop$full <- trimws(usmap::statepop$full)
+# head(data_for_map)
+# plot_usmap(data_for_map, values = "pop_2010", color = "blue") +
+#   scale_fill_continuous(name = "Population 2010", 
+#                         low = "white",
+#                         high = "blue") +
+#   theme(legend.position = "right") +
+#   labs(title = "US State Population in 2010")
+
+plot_usmap(data = long_population_data, values = "pop_2010", color = "blue") +
+  scale_fill_continuous(name = "Population 2010", 
+                        low = "white", 
+                        high = "blue",
+                        labels = scales::comma) +
+  theme(legend.position = "right") +
+  labs(title = "US State Population in 2010")
+```
+
+As we see on the plot most populated states in 2010:
+
+1.  California
+
+2.  Texas
+
+3.  Florida
+
+4.  New York\
+    \
+    This plot shows how population changed in states in period of 2010 - 2016\
+
+```{r}
+
+long_population_data <- long_population_data |>
+  mutate(
+    pop_change = pop_2016 - pop_2010
+  )
+
+plot_usmap(data=long_population_data, values = "pop_change", color = "gray") +
+  scale_fill_gradient2(name = "Population change 2010 - 2016",
+                        low = "red", mid = "blue", high = "green",
+                        midpoint = 0,
+                        labels = scales::comma
+                        ) +
+  theme(legend.position = "right") +
+  labs(title = "Population Chanhe in US State Population 2010 - 2016") 
+```
+
+From this plot we see states which had most increases in population:
+
+1.  Texas
+
+2.  California
+
+3.  Florida

@@ -1,0 +1,274 @@
+---
+title: "Project_2_DATA_607"
+author: "Farhod Ibragimov"
+date: "2025-03-03"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(tidyr)
+library(dplyr)
+library(readr)
+library(data.table)
+library(maps)
+library(sf)
+```
+
+
+
+```{r}
+emissions_data <- read.csv("https://raw.githubusercontent.com/farhodibr/CUNY-SPS-MSDS/refs/heads/main/DATA607/PROJECT2/Total%20Emissions%20Per%20Country%20(2000-2020)%20(1).csv")
+
+head(emissions_data)
+
+#removing duplicate columns
+year_cols <- grep("^X2", colnames(emissions_data), value = TRUE)
+emissions_data <- emissions_data |>
+  distinct(across(all_of(starts_with("X2"))), .keep_all = TRUE)
+
+
+format_element <- function(x) {
+  letters_match <- str_extract(x, "(?i)(CO2eq|N2O|CH4|CO2)")
+  clean_txt <- str_remove(x, "(?i)(CO2eq|N2O|CH4|CO2)\\s*") |>
+    str_remove_all("(?i)\\bemissions\\b")
+  
+  clean_txt <- str_to_lower(clean_txt) |>
+    str_replace_all("\\s+", "_") |>
+    str_replace_all("[^a-z0-9_]", "")|>
+    str_replace_all("_$", "")
+  
+  result <- if(!is.na(letters_match) &letters_match !="") {
+    str_c(letters_match, clean_txt, sep = "_")
+  } else {
+    clean_txt
+  }
+  
+  result <- str_replace_all(result, "(?i)\\bn2o\\b", "N2O")
+  result <- str_replace_all(result, "(?i)\\bch4\\b", "CH4")
+  result <- str_replace_all(result, "(?i)\\bar5\\b", "AR5")
+  result <- str_replace_all(result, "(?i)\\bco2\\b", "CO2")
+  result <- str_replace_all(result, "_$", "")
+  
+  return(result)
+}
+
+colnames(emissions_data) <- str_remove_all(colnames(emissions_data), "(?i)^X")
+
+emissions_data <- emissions_data |>
+  mutate(Element = map_chr(Element, format_element)) |>
+  drop_na()
+
+```
+```{r}
+split_row <- 31406
+
+emissions_data_by_countries <- emissions_data[1:split_row, ]
+emissions_data_by_continents <- emissions_data[(split_row +1):nrow(emissions_data), ]
+```
+
+
+```{r}
+emissions_data_long <- emissions_data_by_countries |>
+  
+  pivot_longer(
+    cols = starts_with("2"),
+    names_to = "Year",
+    values_to = "Emission"
+  ) |
+  drop_na()
+colnames(emissions_data_long) <- str_to_lower(colnames(emissions_data_long))
+emissions_data_long$year <- as.numeric(emissions_data_long$year)
+emissions_data_long$emission <- round(emissions_data_long$emission, 2)
+
+unique_areas <- unique(emissions_data_long$area)
+print(unique_areas)
+#write.csv(emissions_data_long, "emissions_data_long.csv", row.names = FALSE)
+
+
+```
+
+
+```{r}
+#total emissions by country
+total_emissions_by_country <- emissions_data_long |>
+  group_by(area) |>
+  summarise(total_emission = sum(emission, na.rm = TRUE)) |>
+  arrange(desc(total_emission))
+
+top10_emissions <- total_emissions_by_country |>
+  top_n(10, total_emission)
+
+ggplot(top10_emissions, aes(x = reorder(area, total_emission), 
+                                       y = total_emission)) +
+  geom_bar(stat = "identity", fill = "steelblue")+
+  scale_y_continuous(trans = "log10")+
+  coord_flip() +
+  labs(title = "Total Emissions by Country 2000 - 2020",
+       x= "Country",
+       y = "Total Emissions (Kilotones)")+
+  theme_minimal()+
+  theme(axis.text.y = element_text(angle = 45, hjust = 1))
+```
+
+
+```{r}
+library(ggplot2)
+library(dplyr)
+
+# Ensure the area names in emissions data are cleaned and standardized
+name_lookup <- c(
+  "United States of America" = "USA",
+  "China, mainland" = "China",
+  "Russian Federation" = "Russia",
+  "Iran (Islamic Republic of)" = "Iran",
+  "United Kingdom of Great Britain and Northern Ireland" = "UK",
+  "Republic of Korea" = "South Korea",
+  "Venezuela (Bolivarian Republic of)" = "Venezuela",
+  "Viet Nam" = "Vietnam",
+  "United Republic of Tanzania" = "Tanzania",
+  "China, Taiwan Province of" = "Taiwan",
+  "Bolivia (Plurinational State of)" = "Bolivia",
+  "Democratic People's Republic of Korea" = "North Korea",
+  "C?e d'Ivoire" = "Ivory Coast",
+  "Syrian Arab Republic" = "Syria",
+  "Trinidad and Tobago" = "Trinidad & Tobago",
+  "Lao People's Democratic Republic" = "Laos",
+  "China, Hong Kong SAR" = "Hong Kong",
+  "Congo" = "Republic of the Congo",
+  "Brunei Darussalam" = "Brunei",
+  "Republic of Moldova" = "Moldova",
+  "Falkland Islands (Malvinas)" = "Falkland Islands",
+  "Netherlands Antilles (former)" = "Netherlands Antilles",
+  "Eswatini" = "Swaziland",
+  "French Guyana" = "French Guiana",
+  "China, Macao SAR" = "Macau",
+  "Cabo Verde" = "Cape Verde",
+  "Antigua and Barbuda" = "Antigua & Barbuda",
+  "Saint Vincent and the Grenadines" = "Saint Vincent",
+  "Micronesia (Federated States of)" = "Micronesia",
+  "R?nion" = "Réunion",
+  "Saint Kitts and Nevis" = "Saint Kitts & Nevis",
+  "British Virgin Islands" = "Virgin Islands",
+  "United States Virgin Islands" = "USA Virgin Islands",
+  "Tuvalu" = "Tuvalu",
+  "Saint Helena, Ascension and Tristan da Cunha" = "Saint Helena"
+)
+
+# Standardize country names in emissions data
+total_emissions_by_country$area <- recode(total_emissions_by_country$area, !!!name_lookup)
+total_emissions_by_country$area <- recode(total_emissions_by_country$area,
+  "T?kiye" = "Turkey",                    # Fix Turkey name
+  "Czechia" = "Czech Republic",          # Fix Czechia name
+  "Trinidad & Tobago" = "Trinidad and Tobago",  # Fix Trinidad & Tobago name
+  "Hong Kong" = "China, Hong Kong SAR",  # Fix Hong Kong name
+  "Republic of the Congo" = "Republic of the Congo", # Fix Republic of the Congo name
+  "Netherlands Antilles" = "Netherlands Antilles",   # Fix Netherlands Antilles name
+  "Macau" = "China, Macao SAR",          # Fix Macau name
+  "Antigua & Barbuda" = "Antigua and Barbuda",  # Fix Antigua & Barbuda name
+  "Réunion" = "Réunion",                 # Fix Réunion name
+  "Saint Kitts & Nevis" = "Saint Kitts and Nevis", # Fix Saint Kitts & Nevis name
+  "USA Virgin Islands" = "United States Virgin Islands", # Fix Virgin Islands name
+  "Tuvalu" = "Tuvalu",                   # Fix Tuvalu name
+  "Gibraltar" = "Gibraltar",             # Fix Gibraltar name
+  "Channel Islands" = "Channel Islands", # Fix Channel Islands name
+  "Holy See" = "Holy See",               # Fix Holy See name
+  "Wallis and Futuna Islands" = "Wallis and Futuna Islands", # Fix Wallis and Futuna Islands name
+  "Tokelau" = "Tokelau"                  # Fix Tokelau name
+)
+
+# Filter out unnecessary regions from world_map
+world_map_clean <- world_map %>%
+  filter(!region %in% c("Antarctica", "French Southern and Antarctic Lands", "Channel Islands", "Holy See"))
+
+# Merge the emissions data with the cleaned world map data
+world_data <- left_join(world_map_clean, total_emissions_by_country, by = c("region" = "area"))
+
+# Remove rows where total_emission is NA after the merge
+world_data_clean <- world_data %>%
+  filter(!is.na(total_emission))
+head(world_data)
+sum(is.na(world_data$total_emission))
+
+missing_emissions <- world_data %>%
+  filter(is.na(total_emission))
+
+# View the rows with missing emissions data
+head(missing_emissions)
+
+missing_countries <- setdiff(total_emissions_by_country$area, world_map$region)
+print(missing_countries)
+
+# Check countries in world_map that are missing from emissions data
+extra_countries <- setdiff(world_map$region, total_emissions_by_country$area)
+print(extra_countries)
+
+# Check the summary of emissions data to ensure it's valid
+summary(world_data_clean$total_emission)
+
+duplicates <- total_emissions_by_country %>%
+  group_by(area) %>%
+  filter(n() > 1)
+print(duplicates)
+
+# Aggregate emissions by country (sum emissions over years)
+total_emissions_by_country <- total_emissions_by_country %>%
+  group_by(area) %>%
+  summarise(total_emission = sum(total_emission, na.rm = TRUE))
+
+total_emissions_by_country$area <- str_trim(str_to_lower(total_emissions_by_country$area))
+world_map_clean$region <- str_trim(str_to_lower(world_map_clean$region))
+# Merge again with world_map after aggregation
+world_data <- left_join(world_map_clean, total_emissions_by_country, by = c("region" = "area"))
+
+world_data_clean <- world_data %>%
+  filter(!is.na(total_emission))
+
+# Check the summary of emissions data to ensure it's valid
+summary(world_data_clean$total_emission)
+world_data_clean$total_emission <- log1p(world_data_clean$total_emission)
+
+head(world_data_clean)
+
+ggplot(world_data_clean) +
+  geom_map(aes(map_id = region, fill = total_emission), map = world_map_clean, color = "black") +
+  scale_fill_viridis_c(option = "plasma", na.value = "gray90") +
+  labs(title = "Total Emissions by Country 2000 - 2020",
+       fill = "Total Emissions (Kilotonnes)") +
+  theme_minimal() +
+  theme(legend.position = "bottom", plot.title = element_text(hjust = 0.5))
+
+ggplot(world_map_clean) +
+  geom_map(aes(map_id = region), map = world_map_clean, color = "black") +
+  labs(title = "World Map") +
+  theme_minimal()
+
+
+```
+
+
+```{r}
+countries_list <- emissions_data_long |>
+  group_split(area)
+
+create_country_tables <- function(countries_list) {
+  # Loop over each element in the countries list
+  lapply(seq_along(countries_list), function(i) {
+    # Get the country name from the 'area' column
+    area_name <- countries_list[[i]]$area[1]  # 'area[1]' because each split has one country name
+    data_table <- as.data.table(countries_list[[i]])  # Convert the data frame to data.table
+    # Dynamically assign the data table to a variable named after the country (area_name)
+    assign(area_name, data_table, envir = .GlobalEnv)
+  })
+}
+
+create_country_tables(countries_list)
+
+head(Afghanistan)
+
+```
+

@@ -1,0 +1,248 @@
+---
+title: "Untitled"
+author: "Farhod Ibragimov"
+date: "2025-05-03"
+output: slidy_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+##Libraries
+
+```{r}
+library(tidymodels)
+library(textrecipes)
+library(tidytext)
+library(yardstick)
+```
+
+
+
+
+## Loading data
+
+```{r}
+url_fake_small <- "https://raw.githubusercontent.com/farhodibr/CUNY-SPS-MSDS/refs/heads/main/DATA607/PROJECT4/Fake_small.csv"
+url_true_small <- "https://raw.githubusercontent.com/farhodibr/CUNY-SPS-MSDS/refs/heads/main/DATA607/PROJECT4/True_small.csv"
+
+
+```
+
+```{r}
+df_fake <- as.data.frame(
+  read.csv(url_fake_small)
+  )
+df_true <- as.data.frame(
+  read.csv(url_true_small)
+)
+```
+
+```{r}
+df_fake |>
+  head(1)|>
+  kable(caption = "First  row of fake news dataset")
+```
+
+## 
+
+```{r}
+df_true|>
+  head(1)|>
+  kable(caption = "First row of true news dataset")
+```
+
+## 
+
+```{r}
+df_fake <-
+  df_fake |>
+  mutate(label = factor("fake"))
+
+df_true <- df_true |>
+  mutate(label = factor("true"))
+
+df_combined <- bind_rows(df_fake, df_true)
+
+df_combined <- df_combined |>
+  mutate(
+    title  = ifelse(is.na(title),"", title),
+    text = ifelse(is.na(text), "", text),
+    full_text = paste(title, text, sep = " ")
+  )
+
+df_combined <- df_combined |>
+  select(full_text, label)|>
+  mutate(doc_id = row_number())|>
+  select(doc_id, full_text, label)
+
+set.seed(123)
+
+df_combined <- df_combined|>
+  slice_sample(prop = 1)
+
+df_combined|>
+  head(10)|>
+  slice_sample(prop = 1)|>
+  mutate(full_text = str_trunc(full_text, 
+                               width = 80, 
+                               side = "right",
+                               ellipsis = "..."))|>
+  kable(caption = "First 10 rows of combined and shuffled data")
+
+
+```
+
+
+```{r}
+df_model <- df_combined |> 
+  select(full_text, label)
+
+set.seed(123)
+data_split <- initial_split(df_model, prop = 0.8, strata = label)
+train_data <- training(data_split)
+test_data <- testing(data_split)
+```
+
+
+##
+
+```{r}
+text_rec <- recipe(label ~ full_text, data = train_data) |>
+  step_tokenize(full_text) |>             
+  step_stopwords(full_text) |>            #
+  step_tokenfilter(full_text, max_tokens = 5000) |>  
+  step_tfidf(full_text)      
+```
+
+
+##
+
+```{r}
+log_model <- logistic_reg(penalty = tune(), mixture = 1) |>  # L1 = 1
+  set_engine("glmnet") |>
+  set_mode("classification")
+
+log_wflow <- workflow() |>
+  add_model(log_model) |>
+  add_recipe(text_rec)
+```
+
+##
+
+```{r}
+
+set.seed(321)
+folds <- vfold_cv(train_data, v = 5, strata = label)
+
+grid <- grid_regular(penalty(), levels = 10)
+
+metrics_to_use <- yardstick::metric_set(
+  yardstick::accuracy,
+  yardstick::roc_auc
+)
+
+small_grid <- tibble(penalty = c(0.01, 0.1))
+
+tuned_res <- tune_grid(
+  log_wflow,
+  resamples = folds,
+  grid = small_grid,  
+  metrics = metrics_to_use
+)
+
+```
+
+##
+
+```{r}
+best_model <- select_best(tuned_res, metric = "accuracy")
+
+final_wflow <- finalize_workflow(log_wflow, best_model)
+
+final_fit <- fit(final_wflow, data = train_data)
+
+```
+
+##
+
+```{r}
+predict(final_fit, test_data, type = "prob") |>
+  bind_cols(predict(final_fit, test_data)) |>
+  bind_cols(test_data) |>
+  metrics(truth = label, estimate = .pred_class)
+
+# Confusion matrix
+predict(final_fit, test_data) |>
+  bind_cols(test_data) |>
+  conf_mat(truth = label, estimate = .pred_class)
+```
+##
+
+```{r}
+autoplot(tuned_res) +
+  labs(
+    title = "Cross-Validation Accuracy vs Penalty",
+    x = "Penalty (Lambda)",
+    y = "Accuracy"
+  ) +
+  theme_minimal()
+```
+##
+
+```{r}
+predict(final_fit, test_data) |>
+  bind_cols(test_data) |>
+  conf_mat(truth = label, estimate = .pred_class) |>
+  autoplot(type = "heatmap") +
+  scale_fill_gradient(low = "white", high = "steelblue") +
+  labs(
+    title = "Confusion Matrix (Test Set)",
+    subtitle = "Fake vs True Prediction Results"
+  ) +
+  theme_minimal()
+```
+##
+
+```{r}
+results <- predict(final_fit, test_data, type = "prob") |>
+  bind_cols(test_data)
+
+roc_curve(results, truth = label, .pred_fake) |>
+  autoplot() +
+  labs(
+    title = "ROC Curve",
+    subtitle = "Fake News as Positive Class"
+  ) +
+  theme_minimal()
+```
+```{r}
+prepped <- prep(text_rec, training = train_data)
+train_tfidf <- juice(prepped)
+
+tidy_tokens <- train_data |>
+  unnest_tokens(word, full_text) |>
+  anti_join(stop_words, by = "word") |>
+  filter(str_length(word) > 2) |>
+  count(label, word, sort = TRUE) |>
+  bind_tf_idf(term = word, document = label, n = n)
+
+top_words <- tidy_tokens |>
+  group_by(label) |>
+  slice_max(tf_idf, n = 15, with_ties = FALSE) |>
+  ungroup()
+
+ggplot(top_words, aes(x = tf_idf, y = reorder_within(word, tf_idf, label))) +
+  geom_col(aes(fill = label), show.legend = FALSE) +
+  facet_wrap(~ label, scales = "free_y") +
+  scale_y_reordered() +
+  labs(
+    title = "Top 15 TF-IDF Words by News Label",
+    x = "TF-IDF Score",
+    y = "Word"
+  ) +
+  theme_minimal()
+
+```
+

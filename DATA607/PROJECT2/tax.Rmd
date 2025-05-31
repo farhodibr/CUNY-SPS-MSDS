@@ -1,0 +1,21 @@
+---
+title: "tax"
+author: "Farhod Ibragimov"
+date: "2025-03-04"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(readr)
+library(readxl)
+```
+
+```{r}
+tax_data <- read.csv("https://raw.githubusercontent.com/farhodibr/CUNY-SPS-MSDS/refs/heads/main/DATA607/PROJECT2/22in11si.csv")
+```
+
