@@ -1,0 +1,107 @@
+---
+title: "sheets_to_MySQL"
+author: "Farhod Ibragimov"
+format: html
+editor: visual
+---
+
+## Quarto
+
+Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+
+## Running Code
+
+``` {style="color: gray"}
+When you click the Render button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+```
+
+```{r MySQL}
+
+
+# Libraries
+library(DBI)
+library(RMySQL)
+library(googlesheets4)
+
+
+
+# URL of the publicly accessible "movie_reviews" Sheet
+sheet_url <- "https://docs.google.com/spreadsheets/d/1x7uAbOozoNutaFOfbq_X8c33vzSXvqshJxZgu_MfJhI/edit?usp=sharing"
+sheet_name <- "Form Responses 1"
+
+# Read the data from the sheet
+data <- read_sheet(sheet_url, sheet = sheet_name)
+#glimpse(data)
+print(colnames(data))
+# Credentials to access database from MySQL
+db_host <- Sys.getenv("DB_HOST")
+db_port <- as.integer(Sys.getenv("DB_PORT"))
+db_name <- Sys.getenv("DB_NAME")
+db_user <- Sys.getenv("DB_USER")
+db_pass <- Sys.getenv("DB_PASS")
+
+# MySQL database connection
+con <- dbConnect(RMySQL::MySQL(), 
+                 dbname = db_name, 
+                 host = db_host, 
+                 port = db_port, 
+                 user = db_user, 
+                 password = db_pass)
+query <- paste("CREATE TABLE Movies_new (
+              Name CHAR(100),
+              Gladiator2 INT,
+              Wolfs INT,
+              The_Substance INT,
+              Bad_Boys4 INT,
+              The_Beekeeper INT,
+              Rebel_Ridge INT)
+                ", sep = "")
+
+dbExecute(con, query)
+# Transfer data into MySQL. Iterating through each variable values row in data.
+for (i in 1:nrow(data)) {
+  name <- data$Name[i]
+  gladiator2 <- data$Gladiator2[i]
+  wolfs <- data$Wolfs[i]
+  the_substance <- data$The_Substance[i]
+  bad_boys4 <- data$Bad_Boys4[i]
+  the_beekeeper <- data$The_Beekeeper[i]
+  rebel_ridge <- data$Rebel_Ridge[i]
+  
+  #And pasting values for same variables in each new row in MySQL database
+  query <- paste0(
+    "INSERT IGNORE INTO Movies_new (Name, Gladiator2, Wolfs, The_Substance, Bad_Boys4, The_Beekeeper, Rebel_Ridge) VALUES (",
+    "'", name, "', ",
+    "'", gladiator2, "', ",
+    "'", wolfs, "', ",
+    "'", the_substance, "', ",
+    "'", bad_boys4, "', ",
+    "'", the_beekeeper, "', ",
+    "'", rebel_ridge, "')"
+  )
+  
+  dbExecute(con, query)
+}
+
+
+# Disconnecting from MySQL
+dbDisconnect(con)
+
+print("Data inserted successfully.")
+
+#Show warnings
+warnings()
+
+rmarkdown::render("C:/CUNY_MSDS/DATA607/LAB2/access_sheets_to_MySQL1.R")
+
+
+```
+
+You can add options to executable code like this
+
+```{r}
+#| echo: false
+2 * 2
+```
+
+The `echo: false` option disables the printing of code (only output is displayed).

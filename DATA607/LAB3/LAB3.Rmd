@@ -1,0 +1,82 @@
+---
+title: "DATA 607 LAB3"
+author: "Farhod Ibragimov"
+date: "2025-02-12"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r libraries}
+library(tidyverse)
+library(openintro)
+```
+
+```{r}
+glimpse(loan50)
+```
+```{r}
+names(loan50)
+```
+```{r}
+#creating unique ID for each row
+loan50_id <- loan50 |>
+  mutate(borrower_id = paste0(substr(state, 1, 2), "-", row_number())) |>
+  relocate(borrower_id)
+glimpse(loan50_id$borrower_id)
+```
+```{r}
+# creating borrowers table(ID, state, homeownership)
+borrowers_table <- loan50_id |>
+  select(borrower_id, state, homeownership) |>
+  distinct()
+View(borrowers_table)
+```
+
+```{r}
+# creating table with anything related to borrowers employment and income
+names(loan50_id)
+borrowers_empl_income <- loan50_id |>
+  select(borrower_id, 
+         emp_length, 
+         annual_income, 
+         has_second_income, 
+         verified_income,
+         total_income) |>
+  distinct()
+View(borrowers_empl_income)
+
+```
+
+```{r}
+# creating table with borrowers credit report information
+names(loan50_id)
+borrowers_credit_report <- loan50_id |>
+  select(borrower_id, 
+         total_credit_limit, 
+         total_credit_utilized, 
+         num_cc_carrying_balance, 
+         debt_to_income,
+         public_record_bankrupt) |>
+  distinct()
+View(borrowers_credit_report)
+```
+
+```{r}
+# creating borrowers loan information table
+names(loan50_id)
+borrowers_loan_info <- loan50_id |>
+  select(borrower_id, 
+         loan_amount, 
+         interest_rate, 
+         term, 
+         grade, 
+         loan_purpose,
+         loan_status) |>
+  distinct()
+View(borrowers_loan_info)
+```
+
+

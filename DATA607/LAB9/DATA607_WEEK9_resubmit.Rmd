@@ -1,0 +1,149 @@
+---
+title: "DATA607_WEEK9_API"
+author: "Farhod Ibragimov"
+date: "2025-03-29"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Loading libraries
+
+```{r}
+library(tidyverse)
+library(httr)
+library(jsonlite)
+library(readr)
+library(tidytext)
+library(ggplot2)
+```
+
+-   `httr`**:** Provides functions for working with HTTP, making it easy to send GET, POST, and other HTTP requests.
+
+-   `jsonlite`**:** Offers tools for parsing JSON data into R objects (like lists or data frames) and converting R objects into JSON.
+
+## Setting API URL and API key
+
+Here I'm creating API endpoint `/svc/mostpopular/v2/viewed/1.json` for *New York Times* most viewed articles for today.
+
+`api_key` includes API key.
+
+```{r}
+api_key <- Sys.getenv("NYT_API_KEY")
+api_url <- paste0("https://api.nytimes.com/svc/mostpopular/v2/viewed/30.json?api-key=", api_key)
+```
+
+## Sending GET request to the NYT API
+
+```{r}
+response <- GET(api_url)
+```
+
+`GET:`this function from `httr`package sends `HTTP GET` request to the URL defined by `api_url`.
+
+The result of the response is stored in `response` variable. It includes status information, headers, and the body of the response.
+
+## Checking the response status
+
+```{r}
+if(status_code(response) == 200) {
+  json_data <- content(response, as = "text", encoding = "UTF-8")
+  data_list <- fromJSON(json_data, flatten = TRUE)
+}else {
+  print("Error: Unable to fetch data from API")
+}
+```
+
+`status_code(response)`retrieves the HTTP status code from the response.
+
+`200`**:** Indicates a successful request. If the status code is 200, the code proceeds to parse the content. Otherwise, it prints an error message.
+
+## Extracting and parsing the JSON content:
+
+```{r}
+json_data <- content(response, as = "text", encoding = "UTF-8")
+data_list <- fromJSON(json_data, flatten = TRUE)
+print(data_list)
+```
+
+Here the code extracts the body of response as a text string.
+
+`UTF-8`ensures that characters are correctly interpreted.
+
+`fromJSON`converts the JSON text into `data_list`using `jsonlite.`
+
+## Converting data into a dataframe:
+
+```{r}
+articles_df <- as.data.frame(data_list$results)
+```
+
+The API’s JSON response typically contains a key called `results` where the actual articles or items are stored.
+
+## Displaying the dataframe:
+
+```{r}
+glimpse(articles_df)
+```
+
+```{r}
+print(head(articles_df))
+```
+
+## Analysis
+
+This code loops through the columns of the dataframe and convert list columns to character strings.
+
+```{r}
+articles_df_clean <- data.frame(lapply(articles_df, function(col) {
+  if (is.list(col)) {
+    # Convert each list element to a single string (separated by "; ")
+    sapply(col, function(x) paste(x, collapse = "; "))
+  } else {
+    col
+  }
+}), stringsAsFactors = FALSE)
+
+articles_df_clean <- articles_df %>% 
+  mutate(across(where(is.list), ~ sapply(.x, toString)))
+```
+
+```{r}
+sections <- table(articles_df_clean$section)
+sorted_section <- sort(sections, decreasing = TRUE)
+
+sections_df <- as.data.frame(sorted_section)
+colnames(sections_df) <- c("section", "count")
+```
+
+```{r}
+ggplot(sections_df, aes(x = reorder(section, -count), y = count)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  labs(title = "Most viewed popular sections by count",
+       x = "Section", y = "Article Count") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+From this plot we can say that the readers most viewed section in last 30 days is US news section.
+
+```{r}
+publish_day <- table(articles_df_clean$published_date)
+sorted_publish_date <- sort(publish_day, decreasing = TRUE)
+date_df <- as.data.frame(sorted_publish_date)
+colnames(date_df) <- c("published_date", "count")
+```
+
+```{r}
+
+ggplot(date_df, aes(x = reorder(published_date, -count), y = count)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  labs(title = "Number of Popular Articles by Date",
+       x = "Published Date", y = "Article Count") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+From this chart we can see that most popular articles views day in last 30 days is March 7th, 2025

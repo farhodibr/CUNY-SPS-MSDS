@@ -1,0 +1,236 @@
+---
+title: "LAB7_DATA607"
+author: "Farhod Ibragimov"
+date: "2025-03-11"
+output: html_document
+encoding: UTF-8
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Loading libraries
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(pdftools)
+#library(tabulizer)
+library(devtools)
+library(dplyr)
+library(knitr)
+library(htmltools)
+library(kableExtra)
+library(arrow)
+library(rvest)
+```
+
+## Converting PDF to dataframe
+
+This code extracts text from PDF file. Then it removes unnecessary lines to keep data only. Finally. the code creates `lab7_inventory_data`dataframe.
+
+```{r}
+lab7_pdf <- pdf_text("C:/CUNY_MSDS/DATA607/File_Formats_Assignments.pdf")
+cat(lab7_pdf)
+
+txt_lines <- unlist(strsplit(lab7_pdf, "\n"))
+
+head(txt_lines)
+#tail(txt_lines)
+
+txt_lines_clean <- txt_lines[-(1:5)]
+txt_lines_clean <- txt_lines_clean[-(25:31)]
+
+
+#print(txt_lines_clean)
+
+lab7_inventory_data <- do.call(rbind, strsplit(txt_lines_clean, ","))
+lab7_inventory_data <- as.data.frame(lab7_inventory_data)
+colnames(lab7_inventory_data) <- as.character(lab7_inventory_data[1, ])
+lab7_inventory_data <- lab7_inventory_data[-1, ]
+colnames(lab7_inventory_data)[ncol(lab7_inventory_data)] <- "Description"
+head(lab7_inventory_data)
+```
+
+Here I do some data cleaning and formatting.
+
+```{r}
+lab7_inventory_data$Description[5] <- "Capacity: 20 cu ft"
+lab7_inventory_data$Description[8] <- "Capacity: 4.5 cu ft"
+lab7_inventory_data$Description[10] <- "Capacity: 5.0 cu ft"
+lab7_inventory_data <- lab7_inventory_data[-c(6, 9, 11), ]
+head(lab7_inventory_data)
+```
+
+## Creating XML data file
+
+This code creates `lab7_inventory.xml`from `lab7_inventory_data`. After that it converts created XML file back into dataframe.
+
+```{r}
+
+library(XML)
+lab7_to_xml <- function(df, root_name = "Inventory", item_name = "Item") {
+  if (!is.data.frame(df)) stop("Error: Input data must be a dataframe")
+
+  doc <- newXMLDoc()
+  root <- newXMLNode(root_name, doc = doc)
+
+  apply(df, 1, function(row) {
+    row <- as.list(row)
+    row <- lapply(row, as.character)  # Convert all to character
+
+    # Create Item node with attributes for Item Name and ID
+    item <- newXMLNode(item_name, attrs = c(Name = row[["Item Name"]], ID = row[["Item ID"]]), parent = root)
+
+    # Add main fields
+    newXMLNode("Category", row[["Category"]], parent = item)
+    newXMLNode("Brand", row[["Brand"]], parent = item)
+    newXMLNode("Price", row[["Price"]], parent = item)
+
+    # Store Variation ID as an attribute
+    if (!is.null(row[["Variation ID"]]) && nzchar(row[["Variation ID"]])) {
+      variation <- newXMLNode("Variation", attrs = c(ID = row[["Variation ID"]]), parent = item)
+      newXMLNode("Details", row[["Variation Details"]], parent = variation)
+    } else {
+      # Even if Variation ID is missing, create a blank field
+      newXMLNode("Variation", attrs = c(ID = ""), parent = item)
+    }
+
+    # Add Description
+    newXMLNode("Description", row[["Description"]], parent = item)
+  })
+
+  return(doc)
+}
+
+xml_doc <- lab7_to_xml(lab7_inventory_data)
+
+saveXML(xml_doc, file = "lab7_inventory.xml")
+
+cat(readLines("lab7_inventory.xml"), sep = "\n")
+```
+
+```{r}
+
+# reading XML
+xml_doc <- xmlParse("lab7_inventory.xml")
+
+# Extract all Item nodes
+items <- getNodeSet(xml_doc, "//Item")
+
+# Convert XML to DataFrame (excluding attributes)
+lab7_xml_copy <- xmlToDataFrame(nodes = items)
+
+# Extract Variation IDs separately by parsing XML attributes
+variation_ids <- sapply(items, function(x) {
+  variation_node <- getNodeSet(x, "./Variation")  # Locate Variation node within each Item
+  if (length(variation_node) > 0) {
+    xmlGetAttr(variation_node[[1]], "ID", default = "")  # Extract "ID" attribute
+  } else {
+    ""
+  }
+})
+
+# Add Variation ID column back to DataFrame
+lab7_xml_copy$`Variation ID` <- variation_ids
+
+# Print final DataFrame
+head(lab7_xml_copy)
+```
+
+Pros and cons of XML format:
+
+-   Pros:
+
+    -   Highly structured, extensible, strong schema support.
+
+-   Cons:
+
+    -   Verbose, complex, less common in modern web and data development.
+
+## Creating JSON file format
+
+This code creates `lab7_inventory.json`from dataframe. After that, code converts it back to dataframe.
+
+```{r message=FALSE, warning=FALSE}
+library(jsonlite)
+lab7_inventory_json <- toJSON(lab7_inventory_data)
+write(lab7_inventory_json, "lab7_inventory.json")
+cat(readLines("lab7_inventory.json"), sep = "\n")
+```
+
+```{r}
+json_data <- fromJSON("lab7_inventory.json")
+lab7_JSON_copy <- as.data.frame(json_data)
+head(lab7_JSON_copy)
+```
+
+Pros and cons of JSON format:
+
+-   **Pros:**
+
+    -   Lightweight, human-readable, widely supported.
+
+-   **Cons:**
+
+    -   Less strict schema, limited data types, less efficient for very large datasets.
+
+## Creating HTML format file
+
+Here dataframe is converted to `lab7_inventory.html`. After that, code converts HTML file back into dataframe.
+
+```{r}
+html_table <- kable(lab7_inventory_data, format = "html", escape = FALSE)
+
+html_output <- paste0("<html><head><title>Inventory</title></head><body>", 
+                      html_table, 
+                      "</body></html>")
+
+writeLines(html_output, "lab7_inventory.html")
+cat(readLines("lab7_inventory.html"), sep = "\n")
+
+html_file <- read_html("lab7_inventory.html")
+tables <- html_file |>
+  html_table(fill = TRUE)
+lab7_HTML_copy <- tables[[1]]
+head(lab7_HTML_copy)
+```
+
+Pros and cons of HTML format:
+
+-   **Pros:**
+
+    -   Standard for web pages, widely supported, easy to learn basics.
+
+-   **Cons:**
+
+    -   Primarily for presentation, not ideal for data analysis, can be inconsistent.
+
+## Creating PARQUET format file
+
+This code creates `lab_7inventory.parquet` from dataframe. And after, code converts Parquet file back into dataframe
+
+```{r}
+write_parquet(lab7_inventory_data, "lab_7inventory.parquet")
+raw_data <- readBin("lab_7inventory.parquet", what = "raw", n = 100)
+
+# Print first 100 bytes
+print(raw_data)
+```
+
+```{r}
+
+df_parquet <- read_parquet("lab_7inventory.parquet")
+
+head(df_parquet)
+```
+
+Pros and cons of PARQUET format:
+
+-   **Pros:**
+
+    -   Columnar storage, highly efficient compression, optimized for big data analytics.
+
+-   **Cons:**
+
+    -   Not human-readable, overhead for small datasets, less suitable for transactional data, slower write speeds.

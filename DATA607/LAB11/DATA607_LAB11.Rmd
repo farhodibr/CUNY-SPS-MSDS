@@ -1,0 +1,114 @@
+---
+title: "DATA607_WEEK11"
+author: "Farhod Ibragimov"
+date: "2025-04-12"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Loading libraries
+
+```{r}
+library(tidyverse)
+library(dplyr)
+library(knitr)
+
+```
+
+## Loading movie ratings dataset
+
+```{r}
+ratings_df <- read.csv("https://raw.githubusercontent.com/farhodibr/CUNY-SPS-MSDS/refs/heads/main/DATA607/LAB11/movie_reviews%20-%20Form%20Responses%201.csv")
+
+```
+
+This dataset contains movie ratings by users of the survey
+
+```{r}
+kable(ratings_df)
+```
+
+## Tidying dataset into long format
+
+```{r}
+ratings_df_long <- ratings_df |>
+  select(-Timestamp) |>
+  pivot_longer(
+    cols = -Name,
+    names_to = "movie",
+    values_to = "rating"
+  )
+kable(head(ratings_df_long, 10))
+```
+
+## Global baseline estimate recommender formula
+
+The global baseline estimate recommender uses following formula:
+
+$$
+\hat{r}_{ui} = \mu + b_u + b_m
+$$
+
+Where:
+
+-   $\mu$ - global average rating
+
+-   $b_u$ - user bias (how a user tends to rate compared to the global average). \
+    This calculated by formula:
+
+    $$
+    b_u = \frac{1}{N_u} (\sum(r_u - \mu)) 
+    $$
+
+    Where: \
+    $r_u$ is the movie's rating by user \
+    $N_u$ is the number of ratings by the user
+
+-   $b_m$ - movies bias (how a movie is rated compared to the global average)\
+    This calculated by formula:
+
+    $$
+    b_m = \frac{1}{N_m}(\sum(r_u - \mu - b_u))
+    $$ Where: \
+    $N_m$ is is the number of ratings for that movie
+
+This code cell calculates $\mu$ (global average rating)
+
+```{r}
+mu <- mean(ratings_df_long$rating, na.rm = TRUE)
+kable(mu)
+```
+
+This code cell creates `user_bias`dataframe, which includes $b_u$ bias for each user:
+
+```{r}
+user_bias <- ratings_df_long |>
+  group_by(Name) |>
+  summarise(bias_user = mean(rating - mu, na.rm = TRUE))
+kable(user_bias)
+```
+
+This code cell creates `movie_bias` dataset, which include $b_m$ bias for each movie:
+
+```{r}
+movie_bias <- ratings_df_long |>
+  left_join(user_bias, by =  "Name") |>
+  group_by(movie) |>
+  summarise(bias_movie = mean(rating - mu - bias_user, na.rm = TRUE))
+kable(movie_bias)
+```
+
+This code cell creates `predicted_ratings`dataframe which calculates predicted ratings for not rated movies (NAs) by using global baseline estimate recommender formula
+
+```{r}
+predicted_ratings <- ratings_df_long |>
+  filter(is.na(rating)) |>
+  left_join(user_bias, by ="Name") |>
+  left_join(movie_bias, by = "movie") |>
+  mutate(predicted = round(mu + bias_user + bias_movie))
+
+kable(predicted_ratings)
+```

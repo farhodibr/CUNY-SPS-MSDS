@@ -1,0 +1,130 @@
+---
+title: "DATA607_LAB10"
+author: "Farhod Ibragimov"
+date: "2025-04-03"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(dplyr)
+library(gganimate)
+library(ggplot2)
+```
+
+
+```{r}
+productivity <- read.csv("https://raw.githubusercontent.com/farhodibr/CUNY-SPS-MSDS/refs/heads/main/DATA607/LAB10/garments_worker_productivity.csv") |>
+  mutate(date = as.Date(date, format = "%m/%d/%Y"))
+
+```
+
+```{r}
+productivity |>
+  group_by(department) |>
+  summarise(avg_productivity = mean(actual_productivity, na.rm = TRUE))
+```
+
+```{r}
+productivity |>
+  mutate(date = as.Date(date, format = "%m/%d/%Y")) |>
+  group_by(date) |>
+  summarise(daily_avg_productivity = mean(actual_productivity, na.rm = TRUE))
+```
+
+```{r}
+productivity |>
+  group_by(team) |>
+  summarise(avg_productivity = mean(actual_productivity, na.rm = TRUE))
+```
+
+```{r}
+productivity |>
+  group_by(team) |>
+  summarise(
+    avg_overtime = mean(over_time, na.rm = TRUE),
+    avg_productivity = mean(actual_productivity, na.rm = TRUE)
+  )
+```
+
+Poductivity drop-off analysis
+
+```{r}
+productivity |>
+  mutate(date  = as.Date(date, format = "%m/%d/%Y")) |>
+  group_by(team) |>
+  arrange(date) |>
+  summarise(
+    first_day = first(actual_productivity),
+    last_day = last(actual_productivity),
+    change = last_day - first_day
+    ) |>
+  arrange(change)
+```
+
+
+```{r}
+productivity_trend <- productivity |>
+  mutate(date = as.Date(date, format = "%m/%d/%Y"))|>
+  group_by(date, team = 1) |>
+  summarise(avg_productivity = mean(actual_productivity, na.rm = TRUE), .groups = "drop")
+```
+
+
+```{r}
+ggplot(productivity_trend, aes(x= date, y = avg_productivity, colour = as.factor(team)))+
+  geom_line(linewidth = 1) +
+  labs(title = "Team productivity over time", subtitle = "Date = {frame_time}",
+       x = "Date",
+       y = "Avg productivity",
+       color = "Team") +
+  transition_reveal(date) +
+  theme_minimal()
+```
+Bar chart of race of team productivity
+
+```{r}
+team_trend <- productivity |>
+  group_by(date, team) |>
+  summarise(avg_productivity = mean(actual_productivity, na.rm = TRUE), .groups = "drop" )
+
+top_teams <- team_trend |>
+  group_by(team) |>
+  summarise(total_avg = mean(avg_productivity, na.rm = TRUE)) |>
+  top_n(10, total_avg) |>
+  pull(team)
+
+team_trend_filtered <- team_trend |>
+  filter(team %in% top_teams)
+
+ggplot(team_trend_filtered, aes(x = reorder(as.factor(team), avg_productivity), 
+                                y = avg_productivity, 
+                                fill = as.factor(team))) +
+  geom_col(show.legend = FALSE) +
+  coord_flip() +
+  labs(title = "Team Productivity Race",
+       subtitle = "Date: {frame_time}",
+       x = "Team", y = "Avg Productivity") +
+  transition_time(date) +
+  ease_aes("cubic-in-out") +
+  theme_minimal(base_size = 14)
+
+anim <- animate(
+  last_plot(),
+  nframes = 200,
+  fps = 10,
+  end_pause = 30,
+  renderer = gifski_renderer()
+)
+
+
+```
+
+
+
+
+

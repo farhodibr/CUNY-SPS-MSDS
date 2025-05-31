@@ -1,0 +1,183 @@
+<?xml version="1.0"?>
+<Inventory>
+  <Item Name="Smartphone" ID="101">
+    <Category>Electronics</Category>
+    <Brand>TechBrand</Brand>
+    <Price>699.99</Price>
+    <Variation ID="101-A">
+      <Details>Color: Black</Details>
+    </Variation>
+    <Description> Storage: 64GB</Description>
+  </Item>
+  <Item Name="Smartphone" ID="101">
+    <Category>Electronics</Category>
+    <Brand>TechBrand</Brand>
+    <Price>699.99</Price>
+    <Variation ID="101-B">
+      <Details>Color: White</Details>
+    </Variation>
+    <Description> Storage: 128GB</Description>
+  </Item>
+  <Item Name="Laptop" ID="102">
+    <Category>Electronics</Category>
+    <Brand>CompuBrand</Brand>
+    <Price>1099.99</Price>
+    <Variation ID="102-A">
+      <Details>Color: Silver</Details>
+    </Variation>
+    <Description> Storage: 256GB</Description>
+  </Item>
+  <Item Name="Laptop" ID="102">
+    <Category>Electronics</Category>
+    <Brand>CompuBrand</Brand>
+    <Price>1099.99</Price>
+    <Variation ID="102-B">
+      <Details>Color: Space Gray</Details>
+    </Variation>
+    <Description> Storage: 512GB</Description>
+  </Item>
+  <Item Name="Refrigerator" ID="201">
+    <Category>Home Appliances</Category>
+    <Brand>HomeCool</Brand>
+    <Price>899.99</Price>
+    <Variation ID="201-A">
+      <Details>Color: Stainless Steel</Details>
+    </Variation>
+    <Description>Capacity: 20 cu ft</Description>
+  </Item>
+  <Item Name="Refrigerator" ID="201">
+    <Category>Home Appliances</Category>
+    <Brand>HomeCool</Brand>
+    <Price>899.99</Price>
+    <Variation ID="201-B">
+      <Details>Color: White</Details>
+    </Variation>
+    <Description> Capacity: 18 cu ft</Description>
+  </Item>
+  <Item Name="Washing Machine" ID="202">
+    <Category>Home Appliances</Category>
+    <Brand>CleanTech</Brand>
+    <Price>499.99</Price>
+    <Variation ID="202-A">
+      <Details>Type: Front Load</Details>
+    </Variation>
+    <Description>Capacity: 4.5 cu ft</Description>
+  </Item>
+  <Item Name="Washing Machine" ID="202">
+    <Category>Home Appliances</Category>
+    <Brand>CleanTech</Brand>
+    <Price>499.99</Price>
+    <Variation ID="202-B">
+      <Details>Type: Top Load</Details>
+    </Variation>
+    <Description>Capacity: 5.0 cu ft</Description>
+  </Item>
+  <Item Name="T-Shirt" ID="301">
+    <Category>Clothing</Category>
+    <Brand>FashionCo</Brand>
+    <Price>19.99</Price>
+    <Variation ID="301-A">
+      <Details>Color: Blue</Details>
+    </Variation>
+    <Description> Size: S</Description>
+  </Item>
+  <Item Name="T-Shirt" ID="301">
+    <Category>Clothing</Category>
+    <Brand>FashionCo</Brand>
+    <Price>19.99</Price>
+    <Variation ID="301-B">
+      <Details>Color: Red</Details>
+    </Variation>
+    <Description> Size: M</Description>
+  </Item>
+  <Item Name="T-Shirt" ID="301">
+    <Category>Clothing</Category>
+    <Brand>FashionCo</Brand>
+    <Price>19.99</Price>
+    <Variation ID="301-C">
+      <Details>Color: Green</Details>
+    </Variation>
+    <Description> Size: L</Description>
+  </Item>
+  <Item Name="Jeans" ID="302">
+    <Category>Clothing</Category>
+    <Brand>DenimWorks</Brand>
+    <Price>49.99</Price>
+    <Variation ID="302-A">
+      <Details>Color: Dark Blue</Details>
+    </Variation>
+    <Description> Size: 32</Description>
+  </Item>
+  <Item Name="Jeans" ID="302">
+    <Category>Clothing</Category>
+    <Brand>DenimWorks</Brand>
+    <Price>49.99</Price>
+    <Variation ID="302-B">
+      <Details>Color: Light Blue</Details>
+    </Variation>
+    <Description> Size: 34</Description>
+  </Item>
+  <Item Name="Fiction Novel" ID="401">
+    <Category>Books</Category>
+    <Brand>-</Brand>
+    <Price>14.99</Price>
+    <Variation ID="401-A">
+      <Details>Format: Hardcover</Details>
+    </Variation>
+    <Description> Language: English</Description>
+  </Item>
+  <Item Name="Fiction Novel" ID="401">
+    <Category>Books</Category>
+    <Brand>-</Brand>
+    <Price>14.99</Price>
+    <Variation ID="401-B">
+      <Details>Format: Paperback</Details>
+    </Variation>
+    <Description> Language: Spanish</Description>
+  </Item>
+  <Item Name="Non-Fiction Guide" ID="402">
+    <Category>Books</Category>
+    <Brand>-</Brand>
+    <Price>24.99</Price>
+    <Variation ID="402-A">
+      <Details>Format: eBook</Details>
+    </Variation>
+    <Description> Language: English</Description>
+  </Item>
+  <Item Name="Non-Fiction Guide" ID="402">
+    <Category>Books</Category>
+    <Brand>-</Brand>
+    <Price>24.99</Price>
+    <Variation ID="402-B">
+      <Details>Format: Paperback</Details>
+    </Variation>
+    <Description> Language: French</Description>
+  </Item>
+  <Item Name="Basketball" ID="501">
+    <Category>Sports Equipment</Category>
+    <Brand>SportsGear</Brand>
+    <Price>29.99</Price>
+    <Variation ID="501-A">
+      <Details>Size: Size 7</Details>
+    </Variation>
+    <Description> Color: Orange</Description>
+  </Item>
+  <Item Name="Tennis Racket" ID="502">
+    <Category>Sports Equipment</Category>
+    <Brand>RacketPro</Brand>
+    <Price>89.99</Price>
+    <Variation ID="502-A">
+      <Details>Material: Graphite</Details>
+    </Variation>
+    <Description> Color: Black</Description>
+  </Item>
+  <Item Name="Tennis Racket" ID="502">
+    <Category>Sports Equipment</Category>
+    <Brand>RacketPro</Brand>
+    <Price>89.99</Price>
+    <Variation ID="502-B">
+      <Details>Material: Aluminum</Details>
+    </Variation>
+    <Description> Color: Silver</Description>
+  </Item>
+</Inventory>

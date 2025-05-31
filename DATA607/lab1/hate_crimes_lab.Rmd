@@ -1,0 +1,134 @@
+---
+title: "Analysis of Hate Crime Database"
+reference: "https://raw.githubusercontent.com/fivethirtyeight/data/master/hate-crimes/hate_crimes.csv"
+author: "Farhod Ibragimov"
+date: "2025-01-26"
+output: pdf_document
+---
+
+Loading required packages:
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+
+library(ggplot2)
+library(reshape2)
+library(dplyr)
+```
+
+## Loading data
+
+Let's load data from .csv file obtained from FiveThirtyEight.
+
+Reference: ("<https://raw.githubusercontent.com/fivethirtyeight/data/master/hate-crimes/hate_crimes.csv>"):
+
+```{r echo=TRUE}
+hate_crimes <- read.csv("https://raw.githubusercontent.com/fivethirtyeight/data/master/hate-crimes/hate_crimes.csv", header = TRUE)
+
+```
+
+We can see that this dataset has 51 observation points, and 12 variables.
+
+## Correlational analysis.
+
+Let's create correlations heatmap for numeric variables, so we can exclude state and state abbreviation variables .
+
+```{r}
+numeric_data <- hate_crimes |> 
+  select_if(is.numeric)
+```
+
+```{r}
+corr_hate_crimes <- cor(numeric_data, use = "complete.obs")
+```
+
+```{r}
+melted_hate_crimes <- melt(corr_hate_crimes)
+
+```
+
+```{r}
+ggplot(melted_hate_crimes, aes(x = Var1, y = Var2, fill = value)) +
+  geom_tile() +
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+                       midpoint = 0, limit = c(-1,1), space = "Lab", 
+                       name="Correlation") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 40, vjust = 1, hjust = 1)) +
+  labs(title = "Heatmap of Correlations in Hate Crimes Dataset",
+       x = "Variables",
+       y = "Variables")
+```
+
+Correlation values closer to 1 show positive correlation, and closer to -1 indicate negative correlation.
+
+Values close to 0 indicate that there is no significant correlation.
+
+Let's explore some strong positive and negative correlations
+
+\pagebreak
+
+## Including Plots
+
+1.  Let's make a scatter plot to see relationship between share of white poverty and median household income
+
+```{r}
+ggplot(hate_crimes, aes(x = share_white_poverty, y = median_household_income)) +
+  geom_point() +
+  geom_smooth(method = "lm")+
+  labs(
+    title = "Share of white poverty and median household income",
+    x = "share of white poverty",
+    y = "median household income"
+  )
+```
+
+The conclusion from this scatter plot is that increase in share of white poverty (explanatory variable) has a negative effect on median household income (response variable).
+
+2.  Let's compare share of population in metro areas with share of non-citizens:
+
+```{r}
+ggplot(numeric_data, aes(x = share_population_in_metro_areas, y = share_non_citizen)) +
+  geom_point(na.rm = TRUE)+
+  geom_smooth(method = "lm")
+```
+
+In this scatter plot we can see that there is a positive relationship in share of population in metro area (explanatory) and share of non-citizens (response).
+
+3.  Let's see how median household income related to share of voters voted for President Trump in 2016:
+
+```{r}
+ggplot(hate_crimes, aes(x = median_household_income, y = share_voters_voted_trump)) +
+  geom_point(na.rm = TRUE) +
+  geom_smooth(method = "lm") +
+  labs(
+    title = "Median household income and share of votes for President Trump in 2016",
+    x = "median household income",
+    y = "share of votes"
+  )
+```
+
+Here we can see that increase in median household income (explanatory variable) had a negative effect on share of voters voted for President Trump (response variable) in 2016.
+
+4.  Let's see relationship between GINI index and share of population with high school degree:
+
+```{r}
+ggplot(hate_crimes, aes(x = share_population_with_high_school_degree, y = gini_index)) +
+  geom_point(na.rm = TRUE) +
+  geom_smooth(method = "lm") +
+  labs(
+    title = " GINI index and share of population with high school degree",
+    x = "share of population with high school degree",
+    y = "GINI index"
+  )
+
+```
+
+The GINI index is used to measure income inequality, wealth inequality, or consumption inequality. A GINI index of 0 represents perfect equality, while an index of 1 implies perfect inequality.
+
+We can see that increase in share of population with high school diploma (explanatory variable) has a negative impact on GINI index (response variable).
+
+```{r}
+ggplot(hate_crimes, aes(x = median_household_income))
+```
