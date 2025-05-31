@@ -1,0 +1,1025 @@
+---
+title: "DATA607 Final Project"
+author: "Gillian McGovern, Aaliyah John-Harry, Farhod Ibragimov"
+date: "2025-05-04"
+output: slidy_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Libraries
+
+```{r}
+library(httr)
+library(jsonlite)
+library(dplyr)
+library(stringr)
+library(rvest)
+library(janitor)
+library(stringr)
+library(tidytext)
+library(tibble)
+library(textdata)
+library(tidyr)
+library(readr)
+library(purrr)
+library(forcats)
+library(ggplot2)
+
+
+# Load sentiment lexicons
+nrc  <- get_sentiments("nrc")
+```
+
+
+## Find the Top Artists
+
+```{r}
+rs <- read_csv("https://raw.githubusercontent.com/aaliyahmjh/DATA607Project/refs/heads/main/rolling_stone.csv", show_col_types = FALSE)
+```
+
+```{r}
+# This dataset has a wide structure with duplicate columns such as name and 3 separate rank columns that can be combined and referenced with a "year" column.
+tidy_rs <- rs %>%
+  pivot_longer(
+    cols = starts_with("rank_"),    
+    names_to = "year",               
+    values_to = "rank",             
+    names_pattern = "rank_(\\d+)" 
+  )
+
+tidy_rs
+```
+
+```{r}
+filter_rs <- tidy_rs %>%
+  select(clean_name, album, genre, year, rank)
+
+# Filter dataset to only focus on albums ranked in 2020
+filter_rs <- filter_rs %>%
+  filter(year == 2020) %>%
+  filter(!is.na(rank))
+
+head(filter_rs)
+```
+```{r}
+# Select the top 10 artists & albums by rank 
+top10_by_rank <- filter_rs %>%
+  arrange(rank) %>%      # sort ascending
+  slice_head(n = 10)      # take the first 10 rows
+
+top10_by_rank
+```
+
+The top artists are:
+
+* Marvin Gaye
+* The Beach Boys
+* Joni Mitchell
+* Stevie Wonder
+* The Beatles
+* Nirvana
+* Fleetwood Mac
+* Prince
+* Bob Dylan
+* Lauryn Hill
+
+## Find the Top Songs for Each Artist
+
+Since each wikipedia page is set up a bit differently, we're going to get the songs for each artist individually:
+
+```{r}
+# Get the html
+html_marvin_gaye <- read_html("https://en.wikipedia.org/wiki/Marvin_Gaye_discography#Singles")
+html_beach_boys <- read_html("https://en.wikipedia.org/wiki/The_Beach_Boys_discography#Singles")
+html_joni_mitchell <- read_html("https://en.wikipedia.org/wiki/Joni_Mitchell_discography#Singles")
+html_stevie_wonder <- read_html("https://en.wikipedia.org/wiki/Stevie_Wonder_discography#Singles")
+html_the_beatles <- read_html("https://en.wikipedia.org/wiki/The_Beatles_singles_discography#Singles")
+html_nirvana <- read_html("https://en.wikipedia.org/wiki/Nirvana_discography#Singles")
+html_fleetwood_mac <- read_html("https://en.wikipedia.org/wiki/Fleetwood_Mac_discography#Singles")
+html_prince <- read_html("https://en.wikipedia.org/wiki/Prince_singles_discography#Singles")
+html_bob_dylan <- read_html("https://en.wikipedia.org/wiki/Bob_Dylan_discography#Singles")
+html_lauryn_hill <- read_html("https://en.wikipedia.org/wiki/Lauryn_Hill_discography#Singles")
+```
+
+```{r}
+# Scrape the songs table from wikipedia
+get_songs_df <- function(html, css_selector) {
+  songs <- html |> html_elements(css_selector) |>
+    html_table()
+  return(as.data.frame(songs[[1]]))
+}
+
+marvin_gaye_df <- get_songs_df(html_marvin_gaye, "#mw-content-text > div.mw-content-ltr.mw-parser-output > table:nth-child(30)") # 1960s
+marvin_gaye_df2 <- get_songs_df(html_marvin_gaye, "#mw-content-text > div.mw-content-ltr.mw-parser-output > table:nth-child(32)") # 1970 - 1984
+marvin_gaye_df3 <- get_songs_df(html_marvin_gaye, "#mw-content-text > div.mw-content-ltr.mw-parser-output > table:nth-child(34)") # Posthumous
+beach_boys_df <- get_songs_df(html_beach_boys, "#mw-content-text > div.mw-content-ltr.mw-parser-output > table:nth-child(21)") # 1960s
+beach_boys_df2 <- get_songs_df(html_beach_boys, "#mw-content-text > div.mw-content-ltr.mw-parser-output > table:nth-child(23)") # 1970s
+beach_boys_df3 <- get_songs_df(html_beach_boys, "#mw-content-text > div.mw-content-ltr.mw-parser-output > table:nth-child(25)") # 1980s
+beach_boys_df4 <- get_songs_df(html_beach_boys, "#mw-content-text > div.mw-content-ltr.mw-parser-output > table:nth-child(27)") # 1990s - present
+joni_mitchell_df <- get_songs_df(html_joni_mitchell, "#mw-content-text > div.mw-content-ltr.mw-parser-output > table:nth-child(19)")
+#stevie_wonder_df <- get_songs_df(html_stevie_wonder, "#mw-content-text > div.mw-content-ltr.mw-parser-output > table:nth-child(16)") # 1960s. Nor working, probably structure had been changed
+stevie_wonder_df2 <- get_songs_df(html_stevie_wonder, "#mw-content-text > div.mw-content-ltr.mw-parser-output > table:nth-child(18)") # 1970s
+stevie_wonder_df3 <- get_songs_df(html_stevie_wonder, "#mw-content-text > div.mw-content-ltr.mw-parser-output > table:nth-child(20)") # 1980s
+stevie_wonder_df4 <- get_songs_df(html_stevie_wonder, "#mw-content-text > div.mw-content-ltr.mw-parser-output > table:nth-child(22)") # 1990s - present
+the_beatles_df <- get_songs_df(html_the_beatles, "#mw-content-text > div.mw-content-ltr.mw-parser-output > table:nth-child(10)")
+nirvana_df <- get_songs_df(html_nirvana, "#mw-content-text > div.mw-content-ltr.mw-parser-output > table:nth-child(20)")
+fleetwood_mac_df <- get_songs_df(html_fleetwood_mac, "#mw-content-text > div.mw-content-ltr.mw-parser-output > table:nth-child(23)")
+prince_df <- get_songs_df(html_prince, "#mw-content-text > div.mw-content-ltr.mw-parser-output > table:nth-child(18)") # 1970s & 80s
+prince_df2 <- get_songs_df(html_prince, "#mw-content-text > div.mw-content-ltr.mw-parser-output > table:nth-child(20)") # 1990s
+prince_df3 <- get_songs_df(html_prince, "#mw-content-text > div.mw-content-ltr.mw-parser-output > table:nth-child(22)") # 2000s
+prince_df4 <- get_songs_df(html_prince, "#mw-content-text > div.mw-content-ltr.mw-parser-output > table:nth-child(24)") # 2010s - 20s
+bob_dylan_df <- get_songs_df(html_bob_dylan, "#mw-content-text > div.mw-content-ltr.mw-parser-output > table:nth-child(18)")
+lauryn_hill_df <- get_songs_df(html_lauryn_hill, "#mw-content-text > div.mw-content-ltr.mw-parser-output > table:nth-child(18)")
+```
+
+```{r}
+# Marvin Gaye
+## 1960s ##
+# Keep the important variables
+marvin_gaye_df <- marvin_gaye_df[, 1:11]
+
+# First row is actually the column names
+marvin_gaye_df <- marvin_gaye_df |>
+  row_to_names(row_number = 1)
+
+# Clean up the names
+marvin_gaye_df_clean <- marvin_gaye_df %>%
+  clean_names()
+colnames(marvin_gaye_df_clean)[4:9] <- c("us", "us_r_and_b", "can", "ire", "ned", "uk")
+
+# Make tidy - make the albums chart it's own variable
+marvin_gaye_df_clean <- marvin_gaye_df_clean |>
+  pivot_longer(cols = us:uk, names_to = "albums_chart", values_to = "peak_chart_position")
+
+# Clean up
+marvin_gaye_df_clean <- marvin_gaye_df_clean |>
+  filter(title != '"—" denotes items that did not chart or were not released in that territory.')
+marvin_gaye_df_clean$title <- str_extract(marvin_gaye_df_clean$title , "^(.).*\\1")
+marvin_gaye_df_clean
+
+## 1970 - 1984 ##
+# First row is actually the column names
+marvin_gaye_df2 <- marvin_gaye_df2 |>
+  row_to_names(row_number = 1)
+
+# Clean up the names
+marvin_gaye_df2_clean <- marvin_gaye_df2 %>%
+  clean_names()
+colnames(marvin_gaye_df2_clean)[4:12] <- c("us", "us_r_and_b", "aus", "can", "ger", "ire", "ned", "swe", "uk")
+
+# Make tidy - make the albums chart it's own variable
+marvin_gaye_df2_clean <- marvin_gaye_df2_clean |>
+  pivot_longer(cols = us:uk, names_to = "albums_chart", values_to = "peak_chart_position")
+marvin_gaye_df2_clean
+
+# Clean up
+marvin_gaye_df2_clean <- marvin_gaye_df2_clean |>
+  filter(title != '"—" denotes items that did not chart or were not released in that territory.')
+marvin_gaye_df2_clean$title <- str_extract(marvin_gaye_df2_clean$title , "^(.).*\\1")
+
+## Posthumous ##
+# First row is actually the column names
+marvin_gaye_df3 <- marvin_gaye_df3 |>
+  row_to_names(row_number = 1)
+
+# Clean up the names
+marvin_gaye_df3_clean <- marvin_gaye_df3 %>%
+  clean_names()
+colnames(marvin_gaye_df3_clean)[4:12] <- c("us", "us_r_and_b", "aus", "ger", "ire", "ned", "sco", "swe", "uk")
+
+# Make tidy - make the albums chart it's own variable
+marvin_gaye_df3_clean <- marvin_gaye_df3_clean |>
+  pivot_longer(cols = us:uk, names_to = "albums_chart", values_to = "peak_chart_position")
+marvin_gaye_df3_clean
+
+# Clean up
+marvin_gaye_df3_clean <- marvin_gaye_df3_clean |>
+  filter(title != '"—" denotes items that did not chart or were not released in that territory. "N/A" indicates chart not yet published.')
+marvin_gaye_df3_clean$title <- str_extract(marvin_gaye_df3_clean$title , "^(.).*\\1")
+
+# To-do: join title and b side columns into 1 column when we create the final song title, year, album DF
+```
+
+
+```{r}
+# The Beach Boys
+
+beach_boys_df_copy <- beach_boys_df
+## 1960s ##
+beach_boys_df <- beach_boys_df |>
+  row_to_names(row_number = 1)
+
+# Clean up the names
+beach_boys_df_clean <- beach_boys_df %>%
+  clean_names()
+colnames(beach_boys_df_clean)[2:12] <- c("title", "us", "us_cash_box", "us_record_world", "aus", "can", "nl", "nor", "swe", "uk", "phi")
+
+# Make tidy - make the albums chart it's own variable
+beach_boys_df_clean <- beach_boys_df_clean |>
+  pivot_longer(cols = us:phi, names_to = "albums_chart", values_to = "peak_chart_position")
+
+# A side and B side single appear in the same cell in single variable, so we need to break them out into individual observations
+beach_boys_df_clean <- separate_rows(beach_boys_df_clean, title, sep = '""')
+beach_boys_df_clean
+
+# Clean up
+beach_boys_df_clean <- beach_boys_df_clean |>
+  filter(title != '"—" denotes a release that did not chart, was not released in the country or the information is unknown (* - US Record World chart data incomplete for early 1964)')
+beach_boys_df_clean$title <- str_extract(beach_boys_df_clean$title , "^(.).*\\1")
+
+## 1970s ##
+beach_boys_df2 <- beach_boys_df2 |>
+  row_to_names(row_number = 1)
+
+# Clean up the names
+beach_boys_df2_clean <- beach_boys_df2 %>%
+  clean_names()
+colnames(beach_boys_df2_clean)[2:12] <- c("title", "us", "us_cash_box", "us_record_world", "us_ac", "aus", "can", "nl", "nor", "swe", "uk")
+
+# Make tidy - make the albums chart it's own variable
+beach_boys_df2_clean <- beach_boys_df2_clean |>
+  pivot_longer(cols = us:uk, names_to = "albums_chart", values_to = "peak_chart_position")
+
+# A side and B side single appear in the same cell in single variable, so we need to break them out into individual observations
+beach_boys_df2_clean <- separate_rows(beach_boys_df2_clean, title, sep = '""')
+beach_boys_df2_clean
+
+## 1980s ##
+beach_boys_df3 <- beach_boys_df3 |>
+  row_to_names(row_number = 1)
+
+# Clean up the names
+beach_boys_df3_clean <- beach_boys_df3 %>%
+  clean_names()
+colnames(beach_boys_df3_clean)[2:9] <- c("title", "us", "us_cash_box", "us_ac", "aus", "can", "ger", "uk")
+
+# Make tidy - make the albums chart it's own variable
+beach_boys_df3_clean <- beach_boys_df3_clean |>
+  pivot_longer(cols = us:uk, names_to = "albums_chart", values_to = "peak_chart_position")
+
+# A side and B side single appear in the same cell in single variable, so we need to break them out into individual observations
+beach_boys_df3_clean <- separate_rows(beach_boys_df3_clean, title, sep = '""')
+beach_boys_df3_clean <- separate_rows(beach_boys_df3_clean, title, sep = '" "')
+beach_boys_df3_clean
+
+## 1990s - Present
+beach_boys_df4 <- beach_boys_df4 |>
+  row_to_names(row_number = 1)
+
+# Clean up the names
+beach_boys_df4_clean <- beach_boys_df4 %>%
+  clean_names()
+colnames(beach_boys_df4_clean)[2:10] <- c("title", "us", "us_cash_box", "us_ac", "aus", "can", "ger", "uk", "us_cou")
+
+# Make tidy - make the albums chart it's own variable
+beach_boys_df4_clean <- beach_boys_df4_clean |>
+  pivot_longer(cols = us:us_cou, names_to = "albums_chart", values_to = "peak_chart_position")
+
+# A side and B side single appear in the same cell in single variable, so we need to break them out into individual observations
+beach_boys_df4_clean <- separate_rows(beach_boys_df4_clean, title, sep = '""')
+beach_boys_df4_clean <- separate_rows(beach_boys_df4_clean, title, sep = '" "')
+the_beach_boys_df4_clean <- beach_boys_df4_clean
+```
+
+```{r}
+# Joni Mitchell
+joni_mitchell_df
+joni_mitchell_df <- joni_mitchell_df |>
+  row_to_names(row_number = 1)
+
+# Clean up the variable names
+joni_mitchell_df_clean <- joni_mitchell_df %>%
+  clean_names()
+colnames(joni_mitchell_df_clean)[3:9] <- c("can", "can_uc", "aus", "uk", "us", "us_ac", "us_main")
+
+# Make tidy - make the albums chart it's own variable
+joni_mitchell_df_clean <- joni_mitchell_df_clean |>
+  pivot_longer(cols = can:us_main, names_to = "albums_chart", values_to = "peak_chart_position")
+joni_mitchell_df_clean
+
+unique(joni_mitchell_df_clean$title)
+joni_mitchell_df_clean <- joni_mitchell_df_clean |>
+  filter(title != '"—" denotes releases that did not chart')
+
+# Clean up song names
+joni_mitchell_df_clean$title <- str_extract(joni_mitchell_df_clean$title , "^(.).*\\1")
+unique(joni_mitchell_df_clean$title)
+```
+
+```{r eval=FALSE, include=FALSE}
+# Stevie Wonder
+stevie_wonder_df
+stevie_wonder_df <- stevie_wonder_df |>
+  row_to_names(row_number = 1)
+
+# Clean up the names
+stevie_wonder_df_clean <- stevie_wonder_df %>%
+  clean_names()
+colnames(stevie_wonder_df_clean)[1:11] <- c("title", "year", "us", "us_r_and_b", "us_ac", "bel", "can", "ger", "ire", "swi", "uk")
+
+# Make tidy - make the albums chart it's own variable
+stevie_wonder_df_clean <- stevie_wonder_df_clean |>
+  pivot_longer(cols = us:uk, names_to = "albums_chart", values_to = "peak_chart_position")
+stevie_wonder_df_clean
+
+# A side and B side single appear in the same cell in single variable, so we need to break them out into individual observations
+stevie_wonder_df_clean <- separate_rows(stevie_wonder_df_clean, title, sep = 'b/w')
+stevie_wonder_df_clean
+
+
+## 1970s
+stevie_wonder_df2
+stevie_wonder_df2 <- stevie_wonder_df2 |>
+  row_to_names(row_number = 1)
+
+# Clean up the names
+stevie_wonder_df2_clean <- stevie_wonder_df2 %>%
+  clean_names()
+colnames(stevie_wonder_df2_clean)[1:12] <- c("title", "year", "us", "us_r_and_b", "us_ac", "aus", "bel", "can", "ger", "ire", "swi", "uk")
+
+# Make tidy - make the albums chart it's own variable
+stevie_wonder_df2_clean <- stevie_wonder_df2_clean |>
+  pivot_longer(cols = us:uk, names_to = "albums_chart", values_to = "peak_chart_position")
+stevie_wonder_df2_clean
+
+# A side and B side single appear in the same cell in single variable, so we need to break them out into individual observations
+stevie_wonder_df2_clean <- separate_rows(stevie_wonder_df2_clean, title, sep = 'b/w')
+stevie_wonder_df2_clean
+
+## 1980s
+stevie_wonder_df3 <- stevie_wonder_df3 |>
+  row_to_names(row_number = 1)
+
+# Clean up the names
+stevie_wonder_df3_clean <- stevie_wonder_df3 %>%
+  clean_names()
+colnames(stevie_wonder_df3_clean)[1:12] <- c("title", "year", "us", "us_r_and_b", "us_ac", "aus", "bel", "can", "ger", "ire", "swi", "uk")
+
+# Make tidy - make the albums chart it's own variable
+stevie_wonder_df3_clean <- stevie_wonder_df3_clean |>
+  pivot_longer(cols = us:uk, names_to = "albums_chart", values_to = "peak_chart_position")
+stevie_wonder_df3_clean
+
+# A side and B side single appear in the same cell in single variable, so we need to break them out into individual observations
+stevie_wonder_df3_clean <- separate_rows(stevie_wonder_df3_clean, title, sep = 'b/w')
+stevie_wonder_df3_clean
+
+## 1990s - present
+stevie_wonder_df4
+stevie_wonder_df4 <- stevie_wonder_df4 |>
+  row_to_names(row_number = 1)
+
+# Clean up the names
+stevie_wonder_df4_clean <- stevie_wonder_df4 %>%
+  clean_names()
+colnames(stevie_wonder_df4_clean)[1:11] <- c("title", "year", "us", "us_r_and_b", "us_ac", "bel", "can", "ger", "ire", "swi", "uk")
+
+# Make tidy - make the albums chart it's own variable
+stevie_wonder_df4_clean <- stevie_wonder_df4_clean |>
+  pivot_longer(cols = us:uk, names_to = "albums_chart", values_to = "peak_chart_position")
+stevie_wonder_df4_clean
+
+# A side and B side single appear in the same cell in single variable, so we need to break them out into individual observations
+stevie_wonder_df4_clean <- separate_rows(stevie_wonder_df4_clean, title, sep = 'b/w')
+stevie_wonder_df4_clean
+```
+
+```{r}
+# The Beatles
+the_beatles_df <- the_beatles_df |>
+  row_to_names(row_number = 1)
+the_beatles_df
+
+# Clean up the names
+the_beatles_df_clean <- the_beatles_df %>%
+  clean_names()
+colnames(the_beatles_df_clean)[1:15] <- c("title", "year", "uk", "aus", "aut", "bel", "can", "ger", "nld", "nor", "nz", "swi", "us", "us_cash_box", "us_record_world")
+
+# Make tidy - make the albums chart it's own variable
+the_beatles_df_clean <- the_beatles_df_clean |>
+  pivot_longer(cols = uk:us_record_world, names_to = "albums_chart", values_to = "peak_chart_position")
+the_beatles_df_clean
+
+# A side and B side single appear in the same cell in single variable, so we need to break them out into individual observations
+the_beatles_df_clean <- separate_rows(the_beatles_df_clean, title, sep = '""')
+the_beatles_df_clean
+```
+```{r}
+# Nirvana
+nirvana_df <- nirvana_df |>
+  row_to_names(row_number = 1)
+nirvana_df
+
+# Clean up the names
+nirvana_df_clean <- nirvana_df %>%
+  clean_names()
+colnames(nirvana_df_clean)[3:12] <- c("us", "aus", "bel", "fin", "fra", "ire", "nz", "prt", "swe", "uk")
+
+# Make tidy - make the albums chart it's own variable
+nirvana_df_clean <- nirvana_df_clean |>
+  pivot_longer(cols = us:uk, names_to = "albums_chart", values_to = "peak_chart_position")
+nirvana_df_clean
+```
+
+
+```{r}
+# Fleetwood Mac
+fleetwood_mac_df
+fleetwood_mac_df <- fleetwood_mac_df |>
+  row_to_names(row_number = 1)
+
+# Clean up the names
+fleetwood_mac_df_clean <- fleetwood_mac_df %>%
+  clean_names()
+colnames(fleetwood_mac_df_clean)[3:13] <- c("uk", "us", "us_rock", "us_ac", "aus", "can", "ger", "irl", "nl", "nz")
+
+# Make tidy - make the albums chart it's own variable
+fleetwood_mac_df_clean <- fleetwood_mac_df_clean |>
+  pivot_longer(cols = uk:nz, names_to = "albums_chart", values_to = "peak_chart_position")
+fleetwood_mac_df_clean
+```
+
+```{r}
+# Prince
+
+## 70s & 80s
+prince_df
+prince_df <- prince_df |>
+  row_to_names(row_number = 1)
+
+# Clean up the names
+prince_df_clean <- prince_df %>%
+  clean_names()
+colnames(prince_df_clean)[3:7] <- c("us", "us_r_and_b", "us_dance", "nld_tip", "uk")
+
+# Make tidy - make the albums chart it's own variable
+prince_df_clean <- prince_df_clean |>
+  pivot_longer(cols = us:uk, names_to = "albums_chart", values_to = "peak_chart_position")
+prince_df_clean
+
+## 1990s
+prince_df2 <- prince_df2 |>
+  row_to_names(row_number = 1)
+
+# Clean up the names
+prince_df2_clean <- prince_df2 %>%
+  clean_names()
+colnames(prince_df2_clean)[3:12] <- c("us", "us_r_and_b", "aus", "can", "fra", "ger", "nz", "swe", "swi", "uk")
+
+# Make tidy - make the albums chart it's own variable
+prince_df2_clean <- prince_df2_clean |>
+  pivot_longer(cols = us:uk, names_to = "albums_chart", values_to = "peak_chart_position")
+prince_df2_clean
+
+## 2000s
+prince_df3 <- prince_df3 |>
+  row_to_names(row_number = 1)
+
+# Clean up the names
+prince_df3_clean <- prince_df3 %>%
+  clean_names()
+colnames(prince_df3_clean)[3:11] <- c("us", "us_r_and_b", "aus", "ger", "ire", "nld", "nor", "swi", "uk")
+
+# Make tidy - make the albums chart it's own variable
+prince_df3_clean <- prince_df3_clean |>
+  pivot_longer(cols = us:uk, names_to = "albums_chart", values_to = "peak_chart_position")
+prince_df3_clean
+
+## 2010s - present
+prince_df4 <- prince_df4 |>
+  row_to_names(row_number = 1)
+prince_df4
+
+# Clean up the names
+prince_df4_clean <- prince_df4 %>%
+  clean_names()
+colnames(prince_df4_clean)[3:7] <- c("us_adult_r_and_b", "us_r_and_b", "us_r_and_b_digital", "us_r_and_b_sales", "uk")
+
+# Make tidy - make the albums chart it's own variable
+prince_df4_clean <- prince_df4_clean |>
+  pivot_longer(cols = us_adult_r_and_b:uk, names_to = "albums_chart", values_to = "peak_chart_position")
+
+# Wikipedia added a "Posthumous" section within the same table, so need to remove that row to make the data frame tidy
+prince_df4_clean <- prince_df4_clean |>
+  filter(title != "Posthumous", title != '"—" denotes a single that was not released or did not chart in the region.')
+prince_df4_clean
+```
+
+```{r}
+# Bob Dylan
+bob_dylan_df
+bob_dylan_df <- bob_dylan_df |>
+  row_to_names(row_number = 1)
+
+# Clean up the names
+bob_dylan_df_clean <- bob_dylan_df %>%
+  clean_names()
+colnames(bob_dylan_df_clean)[2:9] <- c("title", "us", "us_main", "us_cash", "aus", "ire", "nl", "uk")
+
+# Make tidy - make the albums chart it's own variable
+bob_dylan_df_clean <- bob_dylan_df_clean |>
+  pivot_longer(cols = us:uk, names_to = "albums_chart", values_to = "peak_chart_position")
+bob_dylan_df_clean
+
+# A side and B side single appear in the same cell in single variable, so we need to break them out into individual observations
+bob_dylan_df_clean <- separate_rows(bob_dylan_df_clean, title, sep = 'b/w')
+bob_dylan_df_clean
+```
+
+```{r}
+# Bob Dylan
+lauryn_hill_df
+lauryn_hill_df <- lauryn_hill_df |>
+  row_to_names(row_number = 1)
+
+# Clean up the names
+lauryn_hill_df_clean <- lauryn_hill_df %>%
+  clean_names()
+colnames(lauryn_hill_df_clean)[3:12] <- c("us", "us_r_and_b", "us_rhy", "aus", "fra", "nl", "nz", "swe", "swi", "uk")
+
+# Make tidy - make the albums chart it's own variable
+lauryn_hill_df_clean <- lauryn_hill_df_clean |>
+  pivot_longer(cols = us:uk, names_to = "albums_chart", values_to = "peak_chart_position")
+lauryn_hill_df_clean
+
+#<<<<<<<<<<---------------Gillian McGovern's code ends-------------->>>>>>>>>>>>>>>>
+```
+
+## Creating a single dataframe for Artist/Song/Album/Year
+
+```{r}
+# This code chunk is created by Farhod Ibragimov
+artist_dfs <- c("the_beach_boys_df4_clean",
+                    "joni_mitchell_df_clean",
+                    #"stevie_wonder_df4_clean",
+                    "the_beatles_df_clean",
+                    "nirvana_df_clean",
+                    "fleetwood_mac_df_clean",
+                    "prince_df4_clean",
+                    "bob_dylan_df_clean",
+                    "lauryn_hill_df_clean")
+```
+
+```{r}
+# This code chunk is created by Farhod Ibragimov
+
+# This function:
+# - extracts artist name from object name (everything before "_df")
+# - cleans song titles
+# - adds artist column
+# - saves cleaned df to global env with name like "artist_cleaned_songs"
+
+clean_and_save_songs_df <- function(df_name_string) {
+  # get df by name
+  df <- get(df_name_string, envir = .GlobalEnv)
+
+  # get artist name from df name (before "_df")
+  artist_id <- str_extract(df_name_string, "^(.*?)(?=_df)")
+  artist_title <- str_to_title(str_replace_all(artist_id, "_", " "))
+
+  cleaned_df <- df |>
+    mutate(
+      # clean title — remove quotes, () [] {}, cut after cd, us, uk etc.
+      title = title |>
+        str_trim() |>
+        str_replace_all('"', "") |>
+        str_remove_all("\\(.*?\\)") |>
+        str_remove_all("\\[.*?\\]") |>
+        str_remove_all("\\{.*?\\}") |>
+        str_remove_all("(?i)[ ]?(cd|us|uk|canadian)[\\s\\-:]+.*$") |>
+        str_squish(),
+      # add artist column
+      artist = artist_title
+    ) |>
+    # drop junk rows like "denotes", "not released", etc.
+    filter(
+      !str_detect(title, "(?i)denotes|indicates|refers to|represents|not released")
+    ) |>
+    # keep only one row per title
+    distinct(title, .keep_all = TRUE)
+
+  # save cleaned df to global env
+  cleaned_df_name <- paste0(artist_id, "_cleaned_songs")
+  assign(cleaned_df_name, cleaned_df, envir = .GlobalEnv)
+
+  # if album/year column missing, add NA
+  if (!"album" %in% names(cleaned_df)) cleaned_df$album <- NA
+  if (!"year" %in% names(cleaned_df)) cleaned_df$year <- NA
+
+  # keep only needed columns
+  minimal_df <- cleaned_df |>
+    select(artist, title, album, year)
+
+  # if all_artists_songs doesn’t exist, create it
+  if (!exists("all_artists_songs", envir = .GlobalEnv)) {
+    assign("all_artists_songs", minimal_df, envir = .GlobalEnv)
+  } else {
+    # if exists, add to it
+    existing <- get("all_artists_songs", envir = .GlobalEnv)
+    updated <- bind_rows(existing, minimal_df)
+    assign("all_artists_songs", updated, envir = .GlobalEnv)
+  }
+
+  return(cleaned_df)
+}
+
+
+
+
+
+
+#rm(all_artists_songs)
+
+artists_songs_album <- invisible(lapply(artist_dfs, clean_and_save_songs_df))
+
+write.csv(all_artists_songs, "all_artists_songs.csv")
+
+```
+
+```{r}
+#for (df_name in artist_dfs) {
+ # clean_and_save_songs_df(df_name)
+#}
+```
+
+## Creating messy SQL database from all_artists_songs and returning it as tidy df
+
+```{r eval=FALSE, include=FALSE}
+# This code chunk is created by Farhod Ibragimov
+
+# get values securely from env
+user <- Sys.getenv("MYSQL_USER")
+password <- Sys.getenv("MYSQL_PASSWORD")
+dbname <- Sys.getenv("MYSQL_DB")
+host <- Sys.getenv("MYSQL_HOST")
+port <- as.integer(Sys.getenv("MYSQL_PORT"))
+print(user)
+
+# connect to MySQL
+con <- dbConnect(
+  RMariaDB::MariaDB(),
+  user = "glavvrach",
+  password = "Malika@0513",
+  dbname = "data607final",
+  host = "data607final.mysql.database.azure.com",
+  port = 3306,
+  ssl.ca = "C:\\Users\\farho\\Downloads\\DigiCertGlobalRootCA.crt.pem"
+
+)
+```
+
+
+```{r eval=FALSE, include=FALSE}
+# This code chunk is created by Farhod Ibragimov
+
+messy_all_artists <- all_artists_songs |>
+  mutate(
+    song_1 = title,
+    song_2 = ifelse(row_number() %% 2 == 0, paste(title, "Remix"), NA),  # some second titles
+    notes = case_when(
+      grepl("Remix", title) ~ "CD version",
+      grepl("Love", title, ignore.case = TRUE) ~ "— denotes b-side",
+      TRUE ~ ""
+    ),
+    album_name = album,
+    release_year = year,
+    id = row_number()  # ✅ move row_number here
+  ) |>
+  select(id, artist_name = artist, song_1, song_2, album_name, release_year, notes)
+
+
+# upload messy table to MySQL
+dbWriteTable(con, "messy_songs", messy_all_artists, overwrite = TRUE, row.names = FALSE)
+```
+
+```{r eval=FALSE, include=FALSE}
+
+# This code chunk is created by Farhod Ibragimov
+
+messy_from_mysql <- dbReadTable(con, "messy_songs")
+
+tidy_from_mysql <- messy_from_mysql |>
+  filter(!is.na(artist_name)) |>
+  filter(!str_detect(notes, "(?i)denotes|cd|remix")) |>
+  pivot_longer(
+    cols = starts_with("song_"),
+    names_to = "song_slot",
+    values_to = "title"
+  ) |>
+  # Remove missing or empty titles
+  filter(!is.na(title), str_trim(title) != "") |>
+  # Remove titles with remix/variation keywords
+  filter(!str_detect(title, "(?i)remix|version|edit|live|instrumental|mix|b[- ]?side")) |>
+  distinct(artist_name, title, .keep_all = TRUE) |>
+  select(artist = artist_name, title, album = album_name, year = release_year)
+write.csv(tidy_from_mysql, "tidy_from_mysql.csv")
+
+dbDisconnect(con)
+```
+
+
+
+```{r eval=FALSE, include=FALSE}
+# This code chunk is created by Farhod Ibragimov
+# make a copy of clean df
+messy_all_artists <- all_artists_songs |>
+  mutate(
+    id = row_number(),  
+    song_1 = title,
+    song_2 = ifelse(row_number() %% 2 == 0, paste(title, "Remix"), NA),  # some second titles
+    notes = case_when(
+      grepl("Remix", title) ~ "CD version",
+      grepl("Love", title, ignore.case = TRUE) ~ "— denotes b-side",
+      TRUE ~ ""
+    ),
+    album_name = album,
+    release_year = year
+  ) |>
+  select(id, artist_name = artist, song_1, song_2, album_name, release_year, notes)
+
+
+# preview messy version
+head(messy_all_artists)
+```
+
+
+## Get the Song Lyrics Using Genius.com API
+
+```{r}
+
+# This code chunk is created by Farhod Ibragimov
+#<<<<<<<---------------Farhod Ibragimov's code is below------------------->>>>>>>>>>>>
+
+# Genius API token (token needs to be keyed before submitting the project). I'll leave it as is for now.
+genius_token <- "9em6wi6o9dAzPw5U_6qjYCOqRa2nQKZ26DjIe4anzXgCsJJT0hP5ZZsZK3UdsrzH"
+
+#For example we can use this song
+song_name <- "Yesterday"
+artist_band <- "The Beatles"
+
+# This function searches Genius for a song URL
+search_song_final <- function(song_title, artist_name) {
+  # Heads up: Best practice is to load the token securely, not hardcode it.
+  # e.g., using Sys.getenv("GENIUS_API_TOKEN")
+  genius_token <- "9em6wi6o9dAzPw5U_6qjYCOqRa2nQKZ26DjIe4anzXgCsJJT0hP5ZZsZK3UdsrzH" # Using hardcoded token for this example
+
+  # Setting up to call the Genius API's search endpoint
+ base_url <- "https://api.genius.com/search"
+  query <- list(q = paste(song_title, artist_name))
+
+  # Making the request to the API
+  res <- GET(
+    url = base_url,
+    add_headers(Authorization = paste("Bearer", genius_token)), # Authorization header includes the token
+    query = query
+  )
+
+  # Check if the request worked (Status 200 means OK)
+  if (status_code(res) != 200) {
+    warning("API request failed. Status code: ", status_code(res))
+    return(NA) # Return NA on API call failure
+  }
+
+  # Now parse the JSON results. Using flatten=TRUE based on previous findings.
+  content_data <- tryCatch(
+      fromJSON(content(res, "text", encoding = "UTF-8"), flatten = TRUE),
+      error = function(e) {
+          warning("Failed to parse JSON response: ", e$message)
+          return(NULL) # Return NULL on JSON parsing error
+      }
+  )
+  # Ensure a valid response structure was received
+  if (is.null(content_data) || is.null(content_data$response)) return(NA)
+
+  # Search results are typically inside response$hits
+  hits <- content_data$response$hits
+
+  # Process the 'hits' data frame (assuming it's a data frame)
+  # Handle cases with no results or if 'hits' isn't a data frame
+  if (is.null(hits) || !inherits(hits, "data.frame") || nrow(hits) == 0) {
+    return(NA)
+  }
+
+  # Define expected column names based on flatten=TRUE producing specific columns
+  artist_col <- "result.primary_artist.name"
+  url_col <- "result.url"
+
+  # Check if the required columns exist in the data frame
+  if (!all(c(artist_col, url_col) %in% names(hits))) {
+     warning("Required columns ('", artist_col, "', '", url_col, "') not found in flattened API response.")
+     return(NA) # Cannot proceed without these columns
+  }
+
+  # Loop through each row (each potential song hit)
+  for (i in 1:nrow(hits)) {
+      # Get the artist name for the current row from the flattened column
+      artist_raw <- hits[[artist_col]][[i]]
+      artist <- tolower(as.character(artist_raw))
+
+      # Check if the artist name is valid and matches the search query
+      if (!is.na(artist) && nzchar(artist) && str_detect(artist, tolower(artist_name))) {
+          # If the artist matched, get the URL from its column
+          song_url_found <- hits[[url_col]][[i]]
+          if (!is.na(song_url_found) && nzchar(song_url_found)) {
+              # Match found! Return the URL and exit the function.
+              return(song_url_found)
+          }
+      }
+  } # --- End of the loop ---
+
+  # If the loop finishes without returning, no suitable match was found
+  return(NA)
+}
+
+# --- Example: Find the URL ---
+song_url <- search_song_final(song_name, artist_band)
+# This should print the found URL...
+print(song_url)
+
+
+```
+
+```{r}
+# This code chunk is created by Farhod Ibragimov
+
+get_song_sentiment <- function(artist_name, song_title) {
+  song_url <- search_song_final(song_title, artist_name)
+  if (is.na(song_url)) {
+    return(tibble(artist = artist_name, song = song_title, top_emotion = NA))
+  }
+
+  # Using the song_url found previously to scrape the lyrics
+
+# Only run this if a valid song_url was found
+if (!is.na(song_url) && nzchar(song_url)) {
+
+  # Read the HTML content from the URL
+  page_html <- tryCatch(
+    read_html(song_url),
+    error = function(e) {
+      warning("Failed to read URL: ", song_url, "\nError: ", e$message)
+      return(NULL) # Return NULL on page read failure
+    }
+  )
+
+  # Only proceed if the webpage HTML was read successfully
+  if (!is.null(page_html)) {
+
+    # Find the part of the HTML containing the lyrics
+    lyrics_selector <- "div[data-lyrics-container='true']" # Verify this selector!
+
+    # Use rvest to find the HTML element(s) matching the selector
+    lyrics_nodes <- page_html |>
+      html_elements(css = lyrics_selector)
+
+    # Check if any nodes were found using the selector
+    if (length(lyrics_nodes) == 0) {
+      # If not found, the selector was likely wrong or the page structure changed.
+      warning("Could not find lyrics container using selector: '", lyrics_selector,
+              "'. The website structure may have changed or the selector is wrong. ",
+              "Please inspect the page HTML.")
+      scraped_lyrics_df <- NULL # Cannot proceed.
+    } else {
+
+      # Extract the text content from the found node(s)
+      # html_text2 often handles line breaks better
+      lyrics_text_raw <- lyrics_nodes |>
+        html_text2()
+
+      # Clean up the extracted raw text
+      temp_cleaned_vector <- lyrics_text_raw %>%
+     # Split into lines based on the newline character (\n)
+      str_split("\n") %>%
+      # The result of str_split is a list, so unlist it
+      unlist() %>%
+       # Remove structural markers like [Verse 1], [Chorus] etc.
+       str_remove_all("\\[[^\\]]+\\]") %>%
+  # Remove leading/trailing whitespace from lines
+        str_trim()
+
+# Now, apply the filtering using standard base R subsetting (outside the pipe)
+lyrics_text_cleaned <- temp_cleaned_vector[nzchar(temp_cleaned_vector)]
+
+      # Structure the cleaned lines into a data frame
+      scraped_lyrics_df <- tibble(
+        line = 1:length(lyrics_text_cleaned),
+        text = lyrics_text_cleaned
+      )
+
+}
+  } else {
+    # Scraping skipped because reading the URL failed earlier
+    warning("Skipping scraping due to error reading URL.")
+    scraped_lyrics_df <- NULL
+  }
+
+} else {
+   warning("Cannot scrape lyrics because song_url was not found successfully.")
+   scraped_lyrics_df <- NULL # Ensure variable exists even if scraping is skipped
+}
+  
+
+
+head(scraped_lyrics_df, 25)
+
+#<<<<<----------Farhod's code ends---------------->>>>>>>>>
+
+# <<<<---------Aali John's code is below---------------->>>>>>
+
+lyrics_df <- scraped_lyrics_df
+  if (is.null(lyrics_df)) {
+    return(tibble(artist = artist_name, song = song_title, top_emotion = NA))
+  }
+
+  words <- lyrics_df %>%
+    unnest_tokens(word, text)
+
+  top_emotion <- words %>%
+    inner_join(nrc, by = "word", relationship = "many-to-many") %>%
+    filter(!sentiment %in% c("positive", "negative")) %>%
+    count(sentiment, sort = TRUE) %>%
+    slice_head(n = 1) %>%
+    pull(sentiment)
+
+  if (length(top_emotion) == 0) top_emotion <- NA
+
+  return(tibble(artist = artist_name, song = song_title, top_emotion = top_emotion))
+ # return(scraped_lyrics_df)
+}
+
+scraped_lyrics_test <- get_song_sentiment(artist_band, song_name)
+```
+
+
+```{r}
+all_artists_songs <- read_csv("https://raw.githubusercontent.com/farhodibr/DATA607_FINAL_PROJECT/refs/heads/main/tidy_from_mysql.csv", show_col_types = FALSE) # few bug fixes needed, will need to reenter.
+
+# Grab 5 songs from each of the top 10 artists
+get_top5_valid_sentiments <- function(artist_name, song_titles, max_songs = 5) {
+  results <- list()
+
+  for (song in song_titles) {
+    res <- get_song_sentiment(artist_name, song)
+
+    # keep only song + top_emotion
+    if (!is.na(res$top_emotion)) {
+      results <- append(results, list(
+        tibble(song       = res$song,
+               top_emotion = res$top_emotion)
+      ))
+    }
+
+    if (length(results) >= max_songs) break
+  }
+
+  if (length(results) > 0) {
+    return(bind_rows(results))
+  } else {
+    return(tibble(song = NA, top_emotion = NA))
+  }
+}
+
+artist_song_list <- all_artists_songs %>%
+  group_by(artist) %>%
+  summarise(songs = list(title), .groups = "drop")
+
+# Now apply get_top5_valid_sentiments to each row
+valid_sentiments <- artist_song_list %>%
+  mutate(sentiment_result = map2(artist, songs, get_top5_valid_sentiments)) %>%
+  unnest(sentiment_result, names_repair = "unique")
+
+print(valid_sentiments)
+```
+
+```{r}
+ggplot(valid_sentiments, aes(x = fct_infreq(top_emotion), fill = top_emotion)) +
+  geom_bar() +
+  coord_flip() +
+  labs(title = "Top Emotions in Songs by Top 10 Artists",
+       x = "Emotion", y = "Count") +
+  theme_minimal()
+```
+
+```{r}
+valid_sentiments %>%
+  group_by(artist, top_emotion) %>%
+  summarise(n = n(), .groups = "drop") %>%
+  arrange(artist, desc(n))
+
+ggplot(valid_sentiments, aes(x = fct_infreq(top_emotion), fill = artist)) +
+  geom_bar(position = "dodge") +
+  labs(title = "Top Emotions by Artist", x = "Emotion", y = "Number of Songs") +
+  theme_minimal()
+```
+```{r}
+#Artists with the most emotionally varied songs
+valid_sentiments %>%
+  group_by(artist) %>%
+  summarise(num_unique_emotions = n_distinct(top_emotion)) %>%
+  arrange(desc(num_unique_emotions))
+```
+
+
