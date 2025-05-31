@@ -1,0 +1,12 @@
+# Ignore Jupyter checkpoints and system files
+.ipynb_checkpoints/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+*.env
+*.sqlite
+*.db
+.DS_Store
+.vscode/
