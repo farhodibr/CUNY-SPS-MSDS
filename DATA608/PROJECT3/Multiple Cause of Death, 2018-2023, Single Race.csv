@@ -1,0 +1,218 @@
+"Notes","State","State Code","Year","Year Code",Deaths,Population,Crude Rate
+,"Alabama","01","2022","2022",1238,5074296,24.4
+,"Alabama","01","2023 ","2023",1251,5108468,24.5
+"Total","Alabama","01",,,2489,10182764,24.4
+,"Alaska","02","2022","2022",155,733583,21.1
+,"Alaska","02","2023 ","2023",167,733406,22.8
+"Total","Alaska","02",,,322,1466989,21.9
+,"Arizona","04","2022","2022",1472,7359197,20.0
+,"Arizona","04","2023 ","2023",1361,7431344,18.3
+"Total","Arizona","04",,,2833,14790541,19.2
+,"Arkansas","05","2022","2022",631,3045637,20.7
+,"Arkansas","05","2023 ","2023",659,3067732,21.5
+"Total","Arkansas","05",,,1290,6113369,21.1
+,"California","06","2022","2022",3365,39029342,8.6
+,"California","06","2023 ","2023",3074,38965193,7.9
+"Total","California","06",,,6439,77994535,8.3
+,"Colorado","08","2022","2022",995,5839926,17.0
+,"Colorado","08","2023 ","2023",982,5877610,16.7
+"Total","Colorado","08",,,1977,11717536,16.9
+,"Connecticut","09","2022","2022",246,3626205,6.8
+,"Connecticut","09","2023 ","2023",216,3617176,6.0
+"Total","Connecticut","09",,,462,7243381,6.4
+,"Delaware","10","2022","2022",122,1018396,12.0
+,"Delaware","10","2023 ","2023",119,1031890,11.5
+"Total","Delaware","10",,,241,2050286,11.8
+,"District of Columbia","11","2022","2022",153,671803,22.8
+,"District of Columbia","11","2023 ","2023",221,678972,32.5
+"Total","District of Columbia","11",,,374,1350775,27.7
+,"Florida","12","2022","2022",3158,22244823,14.2
+,"Florida","12","2023 ","2023",3163,22610726,14.0
+"Total","Florida","12",,,6321,44855549,14.1
+,"Georgia","13","2022","2022",2083,10912876,19.1
+,"Georgia","13","2023 ","2023",2008,11029227,18.2
+"Total","Georgia","13",,,4091,21942103,18.6
+,"Hawaii","15","2022","2022",63,1440196,4.4
+,"Hawaii","15","2023 ","2023",70,1435138,4.9
+"Total","Hawaii","15",,,133,2875334,4.6
+,"Idaho","16","2022","2022",323,1939033,16.7
+,"Idaho","16","2023 ","2023",337,1964726,17.2
+"Total","Idaho","16",,,660,3903759,16.9
+,"Illinois","17","2022","2022",1767,12582032,14.0
+,"Illinois","17","2023 ","2023",1650,12549689,13.1
+"Total","Illinois","17",,,3417,25131721,13.6
+,"Indiana","18","2022","2022",1160,6833037,17.0
+,"Indiana","18","2023 ","2023",1193,6862199,17.4
+"Total","Indiana","18",,,2353,13695236,17.2
+,"Iowa","19","2022","2022",353,3200517,11.0
+,"Iowa","19","2023 ","2023",339,3207004,10.6
+"Total","Iowa","19",,,692,6407521,10.8
+,"Kansas","20","2022","2022",476,2937150,16.2
+,"Kansas","20","2023 ","2023",459,2940546,15.6
+"Total","Kansas","20",,,935,5877696,15.9
+,"Kentucky","21","2022","2022",810,4512310,18.0
+,"Kentucky","21","2023 ","2023",802,4526154,17.7
+"Total","Kentucky","21",,,1612,9038464,17.8
+,"Louisiana","22","2022","2022",1228,4590241,26.8
+,"Louisiana","22","2023 ","2023",1223,4573749,26.7
+"Total","Louisiana","22",,,2451,9163990,26.7
+,"Maine","23","2022","2022",175,1385340,12.6
+,"Maine","23","2023 ","2023",194,1395722,13.9
+"Total","Maine","23",,,369,2781062,13.3
+,"Maryland","24","2022","2022",808,6164660,13.1
+,"Maryland","24","2023 ","2023",728,6180253,11.8
+"Total","Maryland","24",,,1536,12344913,12.4
+,"Massachusetts","25","2022","2022",255,6981974,3.7
+,"Massachusetts","25","2023 ","2023",268,7001399,3.8
+"Total","Massachusetts","25",,,523,13983373,3.7
+,"Michigan","26","2022","2022",1482,10034113,14.8
+,"Michigan","26","2023 ","2023",1354,10037261,13.5
+"Total","Michigan","26",,,2836,20071374,14.1
+,"Minnesota","27","2022","2022",545,5717184,9.5
+,"Minnesota","27","2023 ","2023",507,5737915,8.8
+"Total","Minnesota","27",,,1052,11455099,9.2
+,"Mississippi","28","2022","2022",811,2940057,27.6
+,"Mississippi","28","2023 ","2023",817,2939690,27.8
+"Total","Mississippi","28",,,1628,5879747,27.7
+,"Missouri","29","2022","2022",1435,6177957,23.2
+,"Missouri","29","2023 ","2023",1272,6196156,20.5
+"Total","Missouri","29",,,2707,12374113,21.9
+,"Montana","30","2022","2022",260,1122867,23.2
+,"Montana","30","2023 ","2023",236,1132812,20.8
+"Total","Montana","30",,,496,2255679,22.0
+,"Nebraska","31","2022","2022",233,1967923,11.8
+,"Nebraska","31","2023 ","2023",199,1978379,10.1
+"Total","Nebraska","31",,,432,3946302,10.9
+,"Nevada","32","2022","2022",602,3177772,18.9
+,"Nevada","32","2023 ","2023",602,3194176,18.8
+"Total","Nevada","32",,,1204,6371948,18.9
+,"New Hampshire","33","2022","2022",152,1395231,10.9
+,"New Hampshire","33","2023 ","2023",136,1402054,9.7
+"Total","New Hampshire","33",,,288,2797285,10.3
+,"New Jersey","34","2022","2022",464,9261699,5.0
+,"New Jersey","34","2023 ","2023",417,9290841,4.5
+"Total","New Jersey","34",,,881,18552540,4.7
+,"New Mexico","35","2022","2022",524,2113344,24.8
+,"New Mexico","35","2023 ","2023",502,2114371,23.7
+"Total","New Mexico","35",,,1026,4227715,24.3
+,"New York","36","2022","2022",1020,19677151,5.2
+,"New York","36","2023 ","2023",921,19571216,4.7
+"Total","New York","36",,,1941,39248367,4.9
+,"North Carolina","37","2022","2022",1773,10698973,16.6
+,"North Carolina","37","2023 ","2023",1727,10835491,15.9
+"Total","North Carolina","37",,,3500,21534464,16.3
+,"North Dakota","38","2022","2022",121,779261,15.5
+,"North Dakota","38","2023 ","2023",102,783926,13.0
+"Total","North Dakota","38",,,223,1563187,14.3
+,"Ohio","39","2022","2022",1784,11756058,15.2
+,"Ohio","39","2023 ","2023",1729,11785935,14.7
+"Total","Ohio","39",,,3513,23541993,14.9
+,"Oklahoma","40","2022","2022",779,4019800,19.4
+,"Oklahoma","40","2023 ","2023",794,4053824,19.6
+"Total","Oklahoma","40",,,1573,8073624,19.5
+,"Oregon","41","2022","2022",632,4240137,14.9
+,"Oregon","41","2023 ","2023",623,4233358,14.7
+"Total","Oregon","41",,,1255,8473495,14.8
+,"Pennsylvania","42","2022","2022",1894,12972008,14.6
+,"Pennsylvania","42","2023 ","2023",1770,12961683,13.7
+"Total","Pennsylvania","42",,,3664,25933691,14.1
+,"Rhode Island","44","2022","2022",37,1093734,3.4
+,"Rhode Island","44","2023 ","2023",56,1095962,5.1
+"Total","Rhode Island","44",,,93,2189696,4.2
+,"South Carolina","45","2022","2022",1064,5282634,20.1
+,"South Carolina","45","2023 ","2023",986,5373555,18.3
+"Total","South Carolina","45",,,2050,10656189,19.2
+,"South Dakota","46","2022","2022",126,909824,13.8
+,"South Dakota","46","2023 ","2023",100,919318,10.9
+"Total","South Dakota","46",,,226,1829142,12.4
+,"Tennessee","47","2022","2022",1442,7051339,20.5
+,"Tennessee","47","2023 ","2023",1545,7126489,21.7
+"Total","Tennessee","47",,,2987,14177828,21.1
+,"Texas","48","2022","2022",4470,30029572,14.9
+,"Texas","48","2023 ","2023",4403,30503301,14.4
+"Total","Texas","48",,,8873,60532873,14.7
+,"Utah","49","2022","2022",430,3380800,12.7
+,"Utah","49","2023 ","2023",475,3417734,13.9
+"Total","Utah","49",,,905,6798534,13.3
+,"Vermont","50","2022","2022",82,647064,12.7
+,"Vermont","50","2023 ","2023",82,647464,12.7
+"Total","Vermont","50",,,164,1294528,12.7
+,"Virginia","51","2022","2022",1279,8683619,14.7
+,"Virginia","51","2023 ","2023",1205,8715698,13.8
+"Total","Virginia","51",,,2484,17399317,14.3
+,"Washington","53","2022","2022",978,7785786,12.6
+,"Washington","53","2023 ","2023",1013,7812880,13.0
+"Total","Washington","53",,,1991,15598666,12.8
+,"West Virginia","54","2022","2022",304,1775156,17.1
+,"West Virginia","54","2023 ","2023",306,1770071,17.3
+"Total","West Virginia","54",,,610,3545227,17.2
+,"Wisconsin","55","2022","2022",806,5892539,13.7
+,"Wisconsin","55","2023 ","2023",738,5910955,12.5
+"Total","Wisconsin","55",,,1544,11803494,13.1
+,"Wyoming","56","2022","2022",118,581381,20.3
+,"Wyoming","56","2023 ","2023",126,584057,21.6
+"Total","Wyoming","56",,,244,1165438,20.9
+"Total",,,,,91910,668202452,13.8
+"---"
+"Dataset: Multiple Cause of Death, 2018-2023, Single Race"
+"Query Parameters:"
+"UCD - ICD-10 Codes: X72 (Intentional self-harm by handgun discharge); X73 (Intentional self-harm by rifle, shotgun and larger"
+"firearm discharge); X74 (Intentional self-harm by other and unspecified firearm discharge); X93 (Assault by handgun discharge);"
+"X94 (Assault by rifle, shotgun and larger firearm discharge); X95 (Assault by other and unspecified firearm discharge)"
+"Year/Month: 2022; 2023"
+"Group By: State; Year"
+"Show Totals: True"
+"Show Zero Values: False"
+"Show Suppressed: False"
+"Calculate Rates Per: 100,000"
+"Rate Options: Default intercensal populations for years 2001-2009 (except Infant Age Groups)"
+"---"
+"Help: See http://wonder.cdc.gov/wonder/help/mcd-expanded.html for more information."
+"---"
+"Query Date: Oct 5, 2025 2:58:47 AM"
+"---"
+"Suggested Citation: Centers for Disease Control and Prevention, National Center for Health Statistics. National Vital Statistics"
+"System, Mortality 2018-2023 on CDC WONDER Online Database, released in 2024. Data are from the Multiple Cause of Death Files,"
+"2018-2023, as compiled from data provided by the 57 vital statistics jurisdictions through the Vital Statistics Cooperative"
+"Program. Accessed at http://wonder.cdc.gov/mcd-icd10-expanded.html on Oct 5, 2025 2:58:47 AM"
+"---"
+Caveats:
+"1. The population figures for years 2023 are single-race estimates of the July 1 resident population, from the Vintage 2023"
+"postcensal series released by the Census Bureau on June 27, 2024. The 2023 series is based on the Modified Blended Base produced"
+"by the US Census Bureau in lieu of the April 1, 2020 decennial population count. The Modified Blended Base consists of the blend"
+"of Vintage 2020 postcensal population estimates for April 1, 2020, 2020 Demographic Analysis Estimates, and 2020 Census data"
+"from the internal Census Edited File (CEF). The population figures for years 2022 are single-race estimates of the July 1"
+"resident population, from the Vintage 2022 postcensal series released by the Census Bureau on June 22, 2023. The 2022 series is"
+"based on the Modified Blended Base produced by the US Census Bureau in lieu of the April 1, 2020 decennial population count. The"
+"Modified Blended Base consists of the blend of Vintage 2020 postcensal population estimates for April 1, 2020, 2020 Demographic"
+"Analysis Estimates, and 2020 Census data from the internal Census Edited File (CEF). The population figures for year 2021 are"
+"single-race estimates of the July 1 resident population, based on the Blended Base produced by the US Census Bureau in lieu of"
+"the April 1, 2020 decennial population count, from the Vintage 2021 postcensal series released by the Census Bureau on June 30,"
+"2022. The population figures for year 2020 are single-race estimates of the July 1 resident population, from the Vintage 2020"
+"postcensal series based on April 2010 Census, released by the Census Bureau on July 27, 2021. The population figures for year"
+"2019 are single-race estimates of the July 1 resident population, from the Vintage 2019 postcensal series based on April 2010"
+"Census, released by the Census Bureau on June 25, 2020. The population figures for year 2018 are single-race estimates of the"
+"July 1 resident population, from the Vintage 2018 postcensal series based on April 2010 Census, released by the Census Bureau on"
+"June 20, 2019. More information: http://wonder.cdc.gov/wonder/help/mcd-expanded.html#Population Data."
+"2. The population figures used in the calculation of death rates for the age group 'under 1 year' are the estimates of the"
+"resident population that is under one year of age. More information: http://wonder.cdc.gov/wonder/help/mcd-expanded.html#Age"
+"Group."
+"3. On March 11, 2021, the 2019 mortality data on CDC WONDER was updated with the 2019 mortality data updated by NCHS on March 4,"
+"2021 to include corrected information for residents of Texas affecting 5 records previously coded to cause code *U01.4,"
+"Terrorism involving firearms (homicide). The underlying and multiple cause of death codes for 5 records were corrected in the"
+"2019 data. Underlying and multiple cause of death codes for those 5 records were recoded to Assault (homicide) by other and"
+"unspecified firearm discharge, ICD-10 code X95. The corrected final death records replaces the data released on December 22,"
+"2020."
+"4. Connecticut population estimates for 2022 and later years are reported for 9 planning regions as county equivalent areas,"
+"instead of the former 8 legacy counties in the Vintage 2022 postcensal series released by the Census Bureau on June 22, 2023,"
+"and in the Vintage 2023 postcensal series released by the Census Bureau on June 27, 2024. Populations estimates for the former"
+"counties are not available for 2022 and later years. More information:"
+"http://wonder.cdc.gov/wonder/help/mcd-expanded.html#Connecticut-2022."
+"5. After the creation of the final 2023 dataset, North Carolina updated the cause of death information for over 900 death"
+"certificates to include a cause of death code indicating drug overdose (ICD-10 underlying cause-of-death codes: X40-X44,"
+"X60-X64, X85, and Y10-Y14). Jurisdictions can continue to update death certificates after the closing of the mortality file. As"
+"a result, users should consider that the actual death count for drug overdose deaths for North Carolina in 2023 is over 4,400"
+"deaths, with a crude rate of approximately 41.0 per 100,000 population, and an age-adjusted rate of approximately 42.1 per"
+"100,000 population. These deaths will not be updated on the final mortality datasets."
+"6. Changes to cause of death classification affect reporting trends. More information:"
+"http://wonder.cdc.gov/wonder/help/mcd-expanded.html#ICD-10 Changes."
