@@ -1,0 +1,204 @@
+U.Value Added by Industry
+U.Value Added by Industry
+"Last Revised on: September 25, 2025"
+Line,,2017,2018,2019,2020,2021,2022,2023,2024
+,,,,,,,,,
+1,"        Gross domestic product",19612.1,20656.5,21540.0,21375.3,23725.6,26054.6,27811.5,29298.0
+2,Private industries,17156.3,18097.8,18909.8,18664.0,20917.7,23128.9,24712.8,26001.7
+3,"    Agriculture, forestry, fishing, and hunting",176.8,177.1,164.2,164.4,230.7,294.0,270.4,269.7
+4,"        Farms",138.7,136.8,122.6,120.5,185.7,247.1,218.2,215.8
+5,"            Crop production",73.2,70.9,57.6,52.4,101.6,131.2,118.5,101.9
+6,"            Animal production and aquaculture",65.6,65.9,65.0,68.1,84.1,115.8,99.7,113.9
+7,"        Forestry, fishing, and related activities",38.1,40.3,41.6,43.9,45.0,47.0,52.2,53.9
+8,"    Mining",267.3,313.5,294.0,202.8,336.1,466.9,411.8,404.2
+9,"        Oil and gas extraction",161.1,189.2,172.8,104.0,225.0,329.1,259.9,252.6
+10,"        Mining, except oil and gas",52.3,52.5,53.1,57.3,68.2,75.4,79.8,80.8
+11,"        Support activities for mining",53.9,71.8,68.1,41.5,42.9,62.5,72.1,70.8
+12,"    Utilities",313.7,320.4,331.6,345.8,392.9,440.8,457.8,454.4
+13,"        Electric power generation, transmission, and distribution",258.5,263.3,271.6,282.1,321.5,357.5,368.9,363.3
+14,"        Natural gas distribution and water, sewage and other systems",55.3,57.0,60.0,63.7,71.4,83.3,88.8,91.1
+15,"    Construction",840.2,889.1,953.0,958.7,1012.1,1112.4,1224.6,1305.4
+16,"        Education, hospital, and health structures",82.9,88.1,94.8,94.5,89.2,98.3,114.7,125.1
+17,"        Maintenance and repair construction",146.6,148.7,156.6,152.6,161.5,179.7,186.1,190.7
+18,"        Office and commercial structures",81.2,86.9,94.4,95.8,94.5,112.6,127.5,120.6
+19,"        Other residential construction",150.2,158.6,172.2,184.0,200.0,211.8,230.4,244.0
+20,"        Other nonresidential structures",102.2,107.7,119.8,110.0,100.9,130.3,183.4,206.6
+21,"        Power and communication structures",69.4,72.6,83.1,82.6,77.9,78.0,94.9,98.3
+22,"        Single-family residential structures",135.9,148.4,147.4,156.0,211.5,221.4,194.0,216.8
+23,"        Transportation structures and highways and streets",71.8,78.3,84.7,83.2,76.6,80.3,93.5,103.4
+24,"    Manufacturing",2109.7,2261.8,2268.8,2156.8,2416.3,2668.2,2816.5,2880.7
+25,"        Durable goods",1178.3,1232.5,1262.5,1201.0,1283.0,1393.3,1492.5,1524.8
+26,"            Wood products",35.7,36.9,36.8,43.0,59.9,64.6,62.3,60.2
+27,"            Nonmetallic mineral products",58.5,59.4,63.0,63.8,67.9,71.6,75.6,77.5
+28,"            Primary metals",59.8,67.8,67.4,56.3,73.8,85.2,83.2,76.5
+29,"                    Iron and steel mills and manufacturing from purchased steel",28.0,33.2,29.6,24.2,40.9,47.4,45.4,38.7
+30,"                    Nonferrous metal production and processing and foundries",31.8,34.5,37.9,32.0,33.0,37.8,37.8,37.9
+31,"            Fabricated metal products",144.8,151.9,158.8,148.3,148.3,175.3,187.9,190.5
+32,"            Machinery",147.6,154.9,161.0,150.1,158.2,175.3,198.3,208.6
+33,"                    Agricultural implement manufacturing",12.5,13.2,14.6,15.4,17.4,19.9,19.4,20.1
+34,"                    Construction machinery manufacturing",12.4,13.2,14.1,12.5,12.7,14.7,18.8,20.2
+35,"                    Mining and oil and gas field machinery manufacturing",6.2,7.4,6.9,4.5,4.5,5.5,6.7,6.5
+36,"                    Other machinery",116.6,121.1,125.4,117.7,123.6,135.2,153.3,161.9
+37,"            Computer and electronic products",248.7,259.9,266.3,272.7,288.8,290.1,293.8,299.8
+38,"                    Computer and peripheral equipment manufacturing",22.4,24.3,25.9,26.5,28.0,27.8,27.4,26.1
+39,"                    Communications equipment manufacturing",29.7,28.4,24.9,22.2,24.6,24.8,24.9,24.5
+40,"                    Semiconductor and other electronic component manufacturing",83.6,87.3,87.9,92.1,99.1,101.2,103.6,111.4
+41,"                    Navigational, measuring, electromedical, and control instruments manufacturing",109.7,116.2,123.8,128.1,132.1,131.8,132.9,132.9
+42,"                    Other computer and electronic product manufacturing",3.4,3.8,3.7,3.8,4.9,4.5,4.9,4.9
+43,"            Electrical equipment, appliances, and components",57.6,59.8,60.1,57.7,61.2,69.6,75.7,80.2
+44,"            Motor vehicles, bodies and trailers, and parts",159.1,161.1,161.8,142.7,143.3,166.6,182.7,185.9
+45,"                    Automobile manufacturing",12.0,11.8,11.6,9.0,10.1,12.9,14.1,14.2
+46,"                    Light truck and utility vehicle manufacturing",55.7,54.6,55.4,50.6,50.4,57.2,64.3,65.2
+47,"                    Heavy duty truck manufacturing",5.6,6.8,7.1,4.9,4.8,5.9,6.6,6.9
+48,"                    Motor vehicle body, trailer, and parts manufacturing",85.8,87.9,87.7,78.2,78.0,90.5,97.7,99.5
+49,"            Other transportation equipment",150.9,159.4,165.6,144.9,153.3,160.7,190.8,197.3
+50,"                    Aerospace product and parts manufacturing",122.9,131.1,134.5,108.2,112.2,118.8,145.4,151.6
+51,"                    All other transportation equipment manufacturing",28.0,28.3,31.1,36.7,41.1,42.0,45.4,45.8
+52,"            Furniture and related products",28.9,29.9,30.4,29.5,30.1,33.7,33.7,34.4
+53,"            Miscellaneous manufacturing",86.6,91.6,91.4,92.1,98.1,100.7,108.6,113.9
+54,"                    Medical equipment and supplies manufacturing",57.7,61.2,61.0,63.9,66.3,66.9,71.5,74.8
+55,"                    Other miscellaneous manufacturing",28.9,30.4,30.4,28.2,31.9,33.8,37.1,39.1
+56,"        Nondurable goods",931.4,1029.3,1006.2,955.7,1133.4,1274.9,1323.9,1355.9
+57,"            Food and beverage and tobacco products",275.3,270.4,272.8,292.7,306.5,299.9,346.8,360.2
+58,"                    Food manufacturing",183.7,184.3,188.0,204.6,214.1,213.9,247.9,256.6
+59,"                    Beverage manufacturing",46.6,44.5,44.8,42.4,47.9,48.1,54.1,56.2
+60,"                    Tobacco product manufacturing",45.0,41.6,40.0,45.7,44.5,37.9,44.8,47.3
+61,"            Textile mills and textile product mills",17.3,16.6,16.7,15.8,17.0,16.7,16.2,16.3
+62,"            Apparel and leather and allied products",9.4,9.3,9.6,9.4,11.0,11.7,11.7,12.5
+63,"            Paper products",55.9,60.2,62.7,65.1,64.6,70.1,73.7,74.4
+64,"            Printing and related support activities",40.6,41.5,41.5,36.5,39.0,40.8,41.0,41.3
+65,"            Petroleum and coal products",110.7,154.2,143.4,61.5,147.8,231.0,218.0,195.7
+66,"            Chemical products",345.1,396.2,374.8,394.7,464.5,509.5,514.6,554.0
+67,"                    Basic chemical manufacturing",74.1,87.9,76.8,71.6,108.7,126.9,127.1,134.4
+68,"                    Resin, rubber, and artificial fibers manufacturing",27.7,33.5,27.1,26.9,35.6,41.5,41.2,43.0
+69,"                    Pharmaceutical and medicine manufacturing",153.4,175.1,174.9,196.1,210.3,219.2,224.5,247.1
+70,"                    Other chemical manufacturing",89.8,99.8,95.9,100.1,110.0,122.0,121.9,129.5
+71,"            Plastics and rubber products",77.2,80.8,84.8,80.0,83.0,95.2,101.8,101.5
+72,"    Wholesale trade",1176.1,1222.1,1296.8,1302.3,1414.9,1594.4,1652.8,1706.3
+73,"        Motor vehicle and motor vehicle parts and supplies merchant wholesalers",68.1,72.5,79.1,74.3,79.0,94.1,104.0,112.3
+74,"        Professional and commercial equipment and supplies merchant wholesalers",123.6,126.2,133.1,139.1,146.2,161.4,167.3,175.9
+75,"        Household appliances and electrical and electronic goods merchant wholesalers",117.0,119.7,123.5,130.2,138.8,157.3,170.1,183.7
+76,"        Machinery, equipment, and supplies merchant wholesalers",105.4,112.2,116.3,113.5,120.2,141.8,157.4,162.4
+77,"        Other durable goods merchant wholesalers",153.1,161.3,167.4,168.8,193.9,222.6,223.5,226.2
+78,"        Drugs and druggists sundries merchant wholesalers",107.2,106.2,114.2,130.4,127.5,142.8,166.0,174.5
+79,"        Grocery and related products merchant wholesalers",95.5,96.3,100.9,104.0,107.0,121.2,130.3,135.5
+80,"        Petroleum and petroleum products merchant wholesalers",123.8,133.5,136.9,124.3,146.9,155.4,158.0,160.2
+81,"        Other nondurable goods merchant wholesalers",212.6,214.0,219.2,224.0,235.9,261.7,262.5,260.0
+82,"        Wholesale electronic markets and agents and brokers",31.4,27.1,28.4,25.3,30.3,33.8,32.1,31.9
+83,"        Customs duties",38.5,53.3,77.8,68.6,89.1,102.3,81.6,83.6
+84,"    Retail trade",1178.9,1223.6,1277.6,1335.2,1537.4,1647.8,1779.6,1849.0
+85,"        Motor vehicle and parts dealers",235.8,243.3,257.5,255.7,317.7,341.8,359.6,356.9
+86,"        Food and beverage stores",162.1,164.1,168.7,191.5,196.9,210.3,230.8,236.1
+87,"        General merchandise stores",152.1,155.0,159.9,162.4,183.2,199.2,207.5,224.1
+88,"        Other retail",629.0,661.2,691.4,725.6,839.6,896.6,981.6,1032.0
+89,"            Building material and garden equipment and supplies dealers",104.3,108.2,111.7,124.8,136.8,144.8,150.9,154.5
+90,"            Health and personal care stores",72.1,72.7,74.7,71.9,78.1,86.5,95.4,98.9
+91,"            Gasoline stations",61.0,64.6,67.7,64.8,74.3,89.2,91.7,93.4
+92,"            Clothing and clothing accessories stores",70.2,71.7,73.1,52.5,68.8,77.8,83.9,87.5
+93,"            Nonstore retailers",183.4,203.0,219.1,279.8,323.0,329.5,385.8,421.4
+94,"            All other retail",138.0,141.0,145.1,131.8,158.6,168.7,173.9,176.3
+95,"    Transportation and warehousing",635.5,677.3,710.0,639.6,779.3,912.1,946.1,987.3
+96,"        Air transportation",128.7,131.1,140.2,64.3,97.4,147.4,168.3,175.7
+97,"        Rail transportation",44.3,46.6,46.2,41.8,45.4,50.3,52.5,53.2
+98,"        Water transportation",14.0,15.7,15.5,12.8,19.8,21.3,23.0,24.3
+99,"        Truck transportation",178.0,191.4,197.4,196.8,231.2,259.5,256.9,257.4
+100,"        Transit and ground passenger transportation",43.4,46.0,54.3,40.8,47.1,58.0,71.2,83.9
+101,"        Pipeline transportation",41.0,44.0,38.9,38.5,41.9,43.4,46.5,48.5
+102,"        Other transportation and support activities",125.0,133.7,144.0,163.1,196.2,216.7,210.2,216.2
+103,"            Scenic and sightseeing transportation and support activities",68.5,73.4,79.4,77.7,91.0,110.7,108.0,110.7
+104,"            Couriers and messengers",56.5,60.3,64.6,85.4,105.3,106.0,102.2,105.6
+105,"        Warehousing and storage",61.1,68.6,73.4,81.6,100.2,115.5,117.5,128.1
+106,"    Information",1010.0,1041.5,1142.6,1181.8,1312.6,1383.5,1491.3,1592.7
+107,"        Publishing industries, except internet (includes software)",236.0,246.7,278.4,303.3,352.1,365.1,407.1,442.7
+108,"            Newspaper, periodical, book, and directory publishers",59.5,60.5,60.3,52.4,58.6,59.7,61.4,62.5
+109,"            Software publishers",176.5,186.1,218.1,250.9,293.5,305.4,345.7,380.2
+110,"        Motion picture and sound recording industries",97.7,93.6,88.5,75.8,93.1,114.6,113.9,119.4
+111,"        Broadcasting and telecommunications",462.1,474.7,501.6,487.2,498.3,487.1,499.1,501.5
+112,"            Broadcasting (except Internet)",104.4,106.5,103.2,105.5,106.3,104.5,107.2,113.4
+113,"            Wired telecommunications carriers",189.8,186.0,191.5,183.6,187.3,183.4,188.6,188.3
+114,"            Wireless telecommunications carriers (except satellites)",142.4,156.6,179.1,170.4,174.9,170.5,173.4,170.2
+115,"            Other telecommunications, including satellite",25.6,25.6,27.8,27.7,29.9,28.8,29.9,29.7
+116,"        Data processing, internet publishing, and other information services",214.2,226.5,274.1,315.6,369.1,416.8,471.2,529.1
+117,"            Data processing, hosting, and related services",96.4,103.8,125.9,144.5,169.5,218.2,251.0,279.6
+118,"            Other information services",117.8,122.6,148.2,171.1,199.6,198.5,220.2,249.4
+119,"    Finance, insurance, real estate, rental, and leasing",4033.0,4258.2,4458.1,4633.8,5014.6,5455.1,5883.4,6281.6
+120,"        Finance and insurance",1508.0,1574.8,1652.3,1718.8,1862.4,1982.6,2075.7,2229.2
+121,"            Federal Reserve banks, credit intermediation, and related activities",648.9,686.6,740.1,772.8,844.1,907.8,946.6,1013.3
+122,"            Securities, commodity contracts, and investments",283.4,291.7,279.0,310.3,358.2,349.2,357.0,396.1
+123,"            Insurance carriers and related activities",568.9,595.6,631.4,634.6,637.5,708.6,749.6,791.8
+124,"                Direct life insurance carriers",54.8,55.1,58.7,57.6,57.4,63.1,64.2,65.6
+125,"                Insurance carriers, except direct life insurance",314.5,331.4,347.7,353.9,340.1,378.6,392.4,410.9
+126,"                Agencies, brokerages, and other insurance related activities",199.6,209.1,225.1,223.2,240.0,266.9,292.9,315.3
+127,"            Funds, trusts, and other financial vehicles",6.8,1.0,1.8,1.1,22.6,17.1,22.5,28.0
+128,"        Real estate and rental and leasing",2525.0,2683.4,2805.9,2915.0,3152.3,3472.5,3807.7,4052.4
+129,"            Real estate",2312.8,2455.8,2563.7,2669.9,2870.8,3157.4,3452.2,3684.2
+130,"                Housing",1795.3,1876.2,1971.4,2064.7,2180.7,2406.6,2657.3,2854.0
+131,"                    Owner-occupied housing",1340.7,1401.4,1462.7,1542.9,1626.3,1796.2,1979.2,2122.1
+132,"                    Tenant-occupied housing",454.6,474.8,508.7,521.8,554.4,610.3,678.1,731.9
+133,"                Other real estate",517.4,579.6,592.3,605.2,690.1,750.9,794.9,830.2
+134,"            Rental and leasing services and lessors of intangible assets",212.3,227.6,242.1,245.1,281.5,315.1,355.5,368.2
+135,"    Professional and business services",2433.6,2589.1,2728.9,2727.6,3071.1,3374.3,3609.8,3811.1
+136,"        Professional, scientific, and technical services",1460.6,1562.1,1653.1,1673.8,1885.2,2057.5,2220.6,2355.1
+137,"            Legal services",266.4,277.1,290.1,288.6,327.2,348.2,359.0,387.7
+138,"            Computer systems design and related services",326.4,358.5,378.6,393.5,436.1,460.6,492.5,522.2
+139,"            Miscellaneous professional, scientific, and technical services",867.8,926.4,984.3,991.8,1121.9,1248.8,1369.1,1445.1
+140,"                Accounting, tax preparation, bookkeeping, and payroll services",125.2,134.0,140.1,139.4,153.8,171.9,187.3,189.5
+141,"                Architectural, engineering, and related services",209.9,221.4,235.4,224.2,237.0,268.0,294.7,316.9
+142,"                Management, scientific, and technical consulting services",204.4,217.0,232.8,228.9,271.3,313.9,337.3,353.9
+143,"                Scientific research and development services",120.9,133.1,144.8,164.6,185.2,200.0,219.9,233.2
+144,"                Advertising, public relations, and related services",89.3,95.0,97.3,99.4,111.1,121.7,134.5,142.7
+145,"                Specialized design services and other professional, scientific, and technical services",118.2,125.9,133.9,135.5,163.7,173.3,195.4,208.9
+146,"        Management of companies and enterprises",370.1,388.3,405.6,404.8,445.7,479.8,504.0,544.3
+147,"        Administrative and waste management services",602.9,638.7,670.2,648.9,740.1,837.0,885.2,911.7
+148,"            Administrative and support services",549.7,581.7,611.3,588.0,671.9,762.6,802.8,823.1
+149,"                    Employment services",249.2,264.6,276.3,270.3,326.9,372.2,364.7,350.7
+150,"                    Services to buildings and dwellings",102.3,110.0,117.2,120.1,132.6,144.3,160.9,176.0
+151,"                    Other administrative and support services",198.2,207.1,217.7,197.7,212.4,246.0,277.2,296.4
+152,"            Waste management and remediation services",53.2,57.0,58.9,60.9,68.3,74.4,82.5,88.6
+153,"    Educational services, health care, and social assistance",1716.9,1792.0,1884.2,1870.7,2004.1,2159.1,2360.1,2544.2
+154,"        Educational services",245.6,257.2,270.3,255.6,269.9,296.1,316.4,334.8
+155,"        Health care and social assistance",1471.3,1534.7,1613.9,1615.1,1734.2,1863.0,2043.7,2209.4
+156,"            Ambulatory health care services",709.7,739.6,783.4,762.6,848.4,907.2,1004.5,1079.0
+157,"                Offices of physicians",307.9,319.3,334.3,321.8,346.8,379.2,409.8,432.7
+158,"                Offices of dentists",99.2,102.8,109.4,93.7,115.6,119.0,131.7,139.9
+159,"                Offices of other health practitioners",78.3,83.8,89.1,86.7,99.7,106.6,127.2,141.6
+160,"                Outpatient care centers",101.0,104.8,112.4,115.4,126.7,134.0,151.4,164.9
+161,"                Other ambulatory health care services",123.2,128.9,138.3,145.0,159.7,168.5,184.3,199.9
+162,"            Hospitals",486.2,505.4,525.0,538.4,566.4,596.2,643.0,691.5
+163,"            Nursing and residential care facilities",147.4,153.6,158.6,164.6,163.2,180.4,196.8,212.3
+164,"            Social assistance",128.2,136.1,146.9,149.5,156.1,179.2,199.4,226.6
+165,"    Arts, entertainment, recreation, accommodation, and food services",831.2,874.6,922.2,693.8,911.0,1070.3,1219.5,1287.1
+166,"        Arts, entertainment, and recreation",213.8,227.2,237.1,171.2,215.6,264.0,303.7,326.8
+167,"            Performing arts, spectator sports, museums, and related activities",126.8,135.8,140.5,100.4,119.1,150.2,175.4,190.8
+168,"            Amusements, gambling, and recreation industries",87.0,91.4,96.6,70.8,96.5,113.8,128.3,136.0
+169,"        Accommodation and food services",617.4,647.4,685.0,522.6,695.4,806.3,915.8,960.4
+170,"            Accommodation",176.3,185.7,194.9,126.7,176.9,217.7,245.6,257.2
+171,"            Food services and drinking places",441.1,461.6,490.2,395.9,518.5,588.6,670.2,703.1
+172,"    Other services, except government",433.2,457.7,477.9,450.6,484.5,549.8,589.2,628.0
+173,"        Repair and maintenance",129.3,136.0,142.8,140.1,153.7,166.4,180.4,191.5
+174,"        Personal and laundry services",114.7,120.4,124.7,92.0,111.0,142.8,158.8,169.2
+175,"        Religious, grantmaking, civic, professional, and similar organizations",170.5,179.3,187.3,196.0,197.8,215.5,224.4,239.9
+176,"        Private households",18.7,22.0,23.0,22.5,22.0,25.1,25.5,27.4
+177,Government,2455.8,2558.8,2630.2,2711.3,2807.9,2925.7,3098.7,3296.3
+178,"    Federal",766.5,796.8,817.4,860.4,901.4,945.5,999.8,1064.9
+179,"        Federal general government",702.1,729.7,751.7,788.4,826.6,872.4,929.1,986.8
+180,"            National defense",405.6,420.1,432.3,451.7,474.0,495.6,520.5,549.4
+181,"            Nondefense",296.5,309.6,319.5,336.6,352.6,376.8,408.6,437.4
+182,"        Government enterprises",64.3,67.1,65.6,72.0,74.7,73.1,70.7,78.1
+183,"    State and local",1689.4,1762.0,1812.8,1850.9,1906.6,1980.2,2098.9,2231.5
+184,"        State and local general government",1544.9,1611.0,1661.7,1709.9,1766.6,1836.6,1952.8,2073.3
+185,"            State and local government educational services",808.2,840.9,864.6,887.8,913.9,951.5,1011.3,1062.2
+186,"            State and local government hospitals and health services",157.2,163.7,169.1,169.9,181.0,183.1,200.6,213.9
+187,"            State and local government other services",579.5,606.5,628.0,652.2,671.7,702.0,741.0,797.2
+188,"        Government enterprises",144.5,150.9,151.1,141.0,140.0,143.6,146.1,158.2
+,Addenda:,,,,,,,,
+189,"        Private goods-producing industries 1",3394.1,3641.5,3680.0,3482.6,3995.3,4541.6,4723.3,4860.1
+190,"        Private services-producing industries 2",13762.2,14456.3,15229.8,15181.3,16922.5,18587.3,19989.5,21141.6
+191,"        Information-communications-technology-producing industries 3",1309.3,1380.1,1505.4,1581.7,1743.0,1816.4,1956.7,2086.2
+
+Legend/Footnotes
+"1. Consists of agriculture, forestry, fishing, and hunting; mining; construction; and manufacturing."
+"2. Consists of utilities; wholesale trade; retail trade; transportation and warehousing; information; finance, insurance, real estate, rental, and leasing; professional and business services; educational services, health care, and social assistance; arts, entertainment, recreation, accommodation, and food services; and other services, except government."
+"3. Consists of computer and electronic product manufacturing (excluding navigational, measuring, electromedical, and control instruments manufacturing); software publishers; broadcasting and telecommunications; data processing, hosting and related services; internet publishing and broadcasting and web search portals; and computer systems design and related services."
+Note. The Bureau of Economic Analysis does not include these detailed estimates in the published tables because their quality is significantly less than that of the higher level aggregates in which they are included.
+Note. Detail may not add to total due to rounding.
