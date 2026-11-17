@@ -14,6 +14,14 @@ A historical analysis of data-related careers, state-level salaries, and cost-of
 
 The report is a rendered notebook, with charts, explanations, and code. Its historical findings should be interpreted within the data periods and assumptions described in the analysis.
 
+### Critical minerals
+
+Import reliance, supplier concentration, and supply-chain visualizations, presented as a slide deck.
+
+**[View the critical-minerals presentation](https://farhodibr.github.io/CUNY-SPS-MSDS/critical-minerals/)** — PDF viewer and PowerPoint download.
+
+[View the DATA608 Project 7 notebook and data](DATA608/PROJECT7/).
+
 ## Browse coursework
 
 Course folders contain assignment sources, selected reports, and supporting data. Group projects retain their authorship in the source documents.
